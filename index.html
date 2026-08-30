@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI学習デスク</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=BIZ+UDGothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF6EC;
+    --paper-line:#E3D9C4;
+    --ink:#3A2E26;
+    --wood:#8C6A4E;
+    --wood-dark:#6B4E39;
+    --sage:#7C9885;
+    --sage-deep:#5B7A66;
+    --amber:#D9A441;
+    --amber-deep:#B8842A;
+    --card:#FFFFFF;
+    --radius:20px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:'BIZ UDGothic','Hiragino Sans',sans-serif;
+    background:
+      linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size: 100% 42px;
+    background-color: var(--paper);
+    color:var(--ink);
+    font-size:20px;
+    line-height:1.6;
+    min-height:100vh;
+  }
+  h1,h2,.brand{font-family:'Zen Maru Gothic',sans-serif;}
+
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 28px;
+    background:var(--wood);
+    color:#fff;
+  }
+  header .brand{
+    font-size:26px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  header .brand .pencil{font-size:28px;}
+  .mode-toggle{
+    display:flex;
+    background:rgba(255,255,255,0.18);
+    border-radius:999px;
+    padding:4px;
+  }
+  .mode-toggle button{
+    border:none;
+    background:transparent;
+    color:#fff;
+    font-family:'Zen Maru Gothic',sans-serif;
+    font-size:16px;
+    font-weight:700;
+    padding:8px 18px;
+    border-radius:999px;
+    cursor:pointer;
+  }
+  .mode-toggle button.active{
+    background:var(--amber);
+    color:var(--wood-dark);
+  }
+
+  main{
+    max-width:1280px;
+    margin:0 auto;
+    padding:24px;
+    display:grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap:22px;
+  }
+  @media (max-width:920px){
+    main{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:0 2px 0 var(--paper-line), 0 8px 22px rgba(107,78,57,0.10);
+    padding:22px;
+    border:1px solid var(--paper-line);
+  }
+  .card h2{
+    margin:0 0 14px 0;
+    font-size:22px;
+    color:var(--wood-dark);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  /* ---- Camera card ---- */
+  .video-wrap{
+    position:relative;
+    background:#20211d;
+    border-radius:14px;
+    overflow:hidden;
+    aspect-ratio:4/3;
+  }
+  video{width:100%;height:100%;object-fit:cover;display:block;}
+  canvas{display:none;}
+  .overlay-msg{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    flex-direction:column;
+    gap:10px;
+    color:#fff;
+    background:rgba(32,33,29,0.55);
+    font-family:'Zen Maru Gothic',sans-serif;
+    font-size:28px;
+    text-align:center;
+    padding:20px;
+  }
+  .overlay-msg span.sub{
+    font-family:'BIZ UDGothic',sans-serif;
+    font-size:16px;
+    opacity:0.85;
+  }
+  .qr-flash{
+    position:absolute;inset:0;
+    border:6px solid var(--amber);
+    border-radius:14px;
+    animation:flash 0.6s ease-out;
+    pointer-events:none;
+  }
+  @keyframes flash{from{opacity:1;}to{opacity:0;}}
+
+  .cam-controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:14px;
+    align-items:center;
+  }
+  select{
+    font-family:inherit;
+    font-size:16px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--paper-line);
+    background:var(--paper);
+    color:var(--ink);
+    flex:1;
+    min-width:180px;
+  }
+  .btn{
+    font-family:'Zen Maru Gothic',sans-serif;
+    font-weight:700;
+    font-size:17px;
+    padding:14px 20px;
+    border-radius:14px;
+    border:none;
+    cursor:pointer;
+    color:#fff;
+    background:var(--sage);
+    transition:transform .08s ease, background .15s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn:hover{background:var(--sage-deep);}
+  .btn.amber{background:var(--amber);color:var(--wood-dark);}
+  .btn.amber:hover{background:var(--amber-deep);color:#fff;}
+  .btn.wood{background:var(--wood);}
+  .btn.wood:hover{background:var(--wood-dark);}
+  .btn:disabled{opacity:0.45;cursor:not-allowed;}
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;}
+  .btn-big{
+    flex:1;
+    min-width:160px;
+    font-size:20px;
+    padding:20px;
+  }
+
+  /* ---- AI support card ---- */
+  .status-pill{
+    display:inline-block;
+    font-size:14px;
+    font-family:'BIZ UDGothic',sans-serif;
+    padding:5px 12px;
+    border-radius:999px;
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    color:var(--wood-dark);
+    margin-bottom:10px;
+  }
+  .qr-content{
+    background:var(--paper);
+    border:2px dashed var(--paper-line);
+    border-radius:14px;
+    padding:16px;
+    min-height:120px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    text-align:center;
+  }
+  .qr-content.filled{border-style:solid;border-color:var(--amber);align-items:stretch;}
+  .qr-content video, .qr-content audio, .qr-content iframe{
+    width:100%;
+    border-radius:10px;
+    border:none;
+  }
+  .qr-content iframe{aspect-ratio:16/9;}
+  .qr-link{
+    word-break:break-all;
+    font-size:15px;
+    color:var(--sage-deep);
+  }
+
+  .divider{
+    height:1px;
+    background:var(--paper-line);
+    margin:18px 0;
+  }
+
+  .ocr-text{
+    background:var(--paper);
+    border-radius:14px;
+    padding:20px;
+    font-size:26px;
+    line-height:2;
+    min-height:100px;
+    white-space:pre-wrap;
+    border:1px solid var(--paper-line);
+  }
+  .ocr-text.placeholder{
+    color:#9c8f7f;
+    font-size:18px;
+  }
+  .speak-controls{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+  .speak-controls label{
+    font-size:15px;
+    color:var(--wood-dark);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  input[type=range]{accent-color:var(--sage-deep);}
+  .lang-toggle button{
+    font-family:'Zen Maru Gothic',sans-serif;
+    font-size:14px;
+    font-weight:700;
+    padding:7px 14px;
+    border-radius:999px;
+    border:1px solid var(--paper-line);
+    background:#fff;
+    cursor:pointer;
+    color:var(--wood-dark);
+  }
+  .lang-toggle button.active{background:var(--sage);color:#fff;border-color:var(--sage);}
+
+  .settings-box{
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .settings-box label{
+    display:block;
+    font-size:14px;
+    color:var(--wood-dark);
+    margin-bottom:6px;
+    font-weight:700;
+  }
+  .settings-box input[type=password], .settings-box select{
+    width:100%;
+    font-family:inherit;
+    font-size:15px;
+    padding:9px 10px;
+    border-radius:10px;
+    border:1px solid var(--paper-line);
+    margin-bottom:10px;
+  }
+  .settings-note{
+    font-size:12.5px;
+    color:#8a7c6a;
+    line-height:1.5;
+  }
+  .translate-box{
+    margin-top:14px;
+  }
+  .translate-result{
+    background:#F3EFE3;
+    border:1px solid var(--paper-line);
+    border-left:5px solid var(--amber);
+    border-radius:0 12px 12px 0;
+    padding:16px;
+    font-size:24px;
+    line-height:1.9;
+    margin-top:10px;
+    min-height:40px;
+    white-space:pre-wrap;
+  }
+  .translate-result.placeholder{
+    color:#9c8f7f;
+    font-size:15px;
+  }
+
+  /* child mode simplification */
+  body.child-mode .advanced{display:none !important;}
+  body.child-mode header .brand{font-size:30px;}
+  body.child-mode .btn-big{font-size:24px;padding:26px;}
+  body.child-mode main{grid-template-columns:1fr;max-width:760px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="pencil">✏️</span> AI学習デスク</div>
+  <div class="mode-toggle">
+    <button id="modeChild" class="active">こどもモード</button>
+    <button id="modeParent">おやモード</button>
+  </div>
+</header>
+
+<main>
+  <!-- CAMERA CARD -->
+  <section class="card">
+    <h2>📷 カメラ</h2>
+    <div class="video-wrap" id="videoWrap">
+      <video id="video" autoplay playsinline muted></video>
+      <div class="overlay-msg" id="overlayMsg">
+        本を置いてください
+        <span class="sub">カメラの下に教科書やプリントを置いてね</span>
+      </div>
+    </div>
+    <canvas id="canvas"></canvas>
+
+    <div class="cam-controls advanced">
+      <select id="deviceSelect"></select>
+      <button class="btn wood" id="startBtn">カメラをつなぐ</button>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn amber btn-big" id="snapBtn" disabled>📖 よんで（OCR）</button>
+    </div>
+    <div class="status-pill advanced" id="camStatus">カメラ未接続</div>
+  </section>
+
+  <!-- AI SUPPORT CARD -->
+  <section class="card">
+    <h2>🤖 AIサポート</h2>
+
+    <div class="settings-box advanced">
+      <label>Claude APIキー（おうちの方が設定）</label>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-...">
+      <label>学年（難しい単語の判定に使います）</label>
+      <select id="gradeSelect">
+        <option value="小学1年">小学1年</option>
+        <option value="小学2年">小学2年</option>
+        <option value="小学3年" selected>小学3年</option>
+        <option value="小学4年">小学4年</option>
+        <option value="小学5年">小学5年</option>
+        <option value="小学6年">小学6年</option>
+        <option value="中学1年">中学1年</option>
+        <option value="中学2年">中学2年</option>
+        <option value="中学3年">中学3年</option>
+      </select>
+      <div class="settings-note">
+        APIキーはこの端末のブラウザ内（localStorage）だけに保存され、外部には送信されません（Claude社のAPIサーバーへの直接通信のみ）。キーはAnthropicのサイトから取得できます。通信のたびに少額の利用料が発生します。
+      </div>
+    </div>
+
+    <div class="status-pill">QRコード自動読み取り中…</div>
+    <div class="qr-content" id="qrContent">
+      <span>QRコードが見つかると、ここに音声や動画が自動で表示されます</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <h2 style="font-size:18px;">📝 よみとった文字</h2>
+    <div class="ocr-text placeholder" id="ocrText">「よんで」ボタンを押すと、ここに文字が表示されます</div>
+
+    <div class="speak-controls">
+      <button class="btn" id="speakBtn" disabled>🔊 きいて</button>
+      <div class="lang-toggle">
+        <button class="active" data-lang="ja-JP">日本語</button>
+        <button data-lang="en-US">English</button>
+      </div>
+      <label class="advanced">はやさ
+        <input type="range" id="rateSlider" min="0.5" max="1.4" step="0.1" value="0.85">
+      </label>
+    </div>
+
+    <div class="translate-box">
+      <button class="btn amber btn-big" id="translateBtn" disabled>🈂️ むずかしい単語だけ日本語に</button>
+      <div class="translate-result placeholder" id="translateResult">ボタンを押すと、ここに変換された文が出ます</div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<script>
+/* ---------------- Mode toggle ---------------- */
+const modeChild = document.getElementById('modeChild');
+const modeParent = document.getElementById('modeParent');
+modeChild.onclick = () => setMode(true);
+modeParent.onclick = () => setMode(false);
+function setMode(isChild){
+  document.body.classList.toggle('child-mode', isChild);
+  modeChild.classList.toggle('active', isChild);
+  modeParent.classList.toggle('active', !isChild);
+}
+
+/* ---------------- Camera setup ---------------- */
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const deviceSelect = document.getElementById('deviceSelect');
+const startBtn = document.getElementById('startBtn');
+const snapBtn = document.getElementById('snapBtn');
+const camStatus = document.getElementById('camStatus');
+const overlayMsg = document.getElementById('overlayMsg');
+let currentStream = null;
+
+async function listDevices(){
+  try{
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter(d => d.kind === 'videoinput');
+    deviceSelect.innerHTML = '';
+    cams.forEach((d,i) => {
+      const opt = document.createElement('option');
+      opt.value = d.deviceId;
+      opt.textContent = d.label || `カメラ ${i+1}`;
+      deviceSelect.appendChild(opt);
+    });
+    // USBの書画カメラらしき名前を優先選択（label取得には一度許可が必要）
+    const usbLike = cams.find(d => /usb|doc|cam/i.test(d.label));
+    if(usbLike) deviceSelect.value = usbLike.deviceId;
+  }catch(e){
+    console.error(e);
+  }
+}
+
+async function startCamera(){
+  try{
+    if(currentStream){
+      currentStream.getTracks().forEach(t => t.stop());
+    }
+    const deviceId = deviceSelect.value;
+    const constraints = {
+      video: deviceId ? { deviceId:{exact:deviceId}, width:{ideal:1920}, height:{ideal:1080} }
+                       : { width:{ideal:1920}, height:{ideal:1080} },
+      audio:false
+    };
+    currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = currentStream;
+    camStatus.textContent = '接続中';
+    snapBtn.disabled = false;
+    overlayMsg.style.display = 'none';
+    await listDevices(); // ラベルが取得できるようになる
+    requestAnimationFrame(scanLoop);
+  }catch(e){
+    camStatus.textContent = '接続エラー: ' + e.message;
+    console.error(e);
+  }
+}
+
+startBtn.onclick = startCamera;
+
+// 初期デバイス一覧（ラベルなし状態でも表示だけしておく）
+listDevices();
+navigator.mediaDevices.addEventListener?.('devicechange', listDevices);
+
+/* ---------------- QR auto-scan ---------------- */
+const qrContent = document.getElementById('qrContent');
+let lastQR = '';
+let lastQRTime = 0;
+let scanCounter = 0;
+
+function scanLoop(){
+  if(video.readyState === video.HAVE_ENOUGH_DATA){
+    scanCounter++;
+    if(scanCounter % 15 === 0){ // 負荷軽減のため間引き
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+      const code = jsQR(imgData.data, imgData.width, imgData.height);
+      if(code && code.data){
+        const now = Date.now();
+        if(code.data !== lastQR || now - lastQRTime > 8000){
+          lastQR = code.data;
+          lastQRTime = now;
+          flashCamera();
+          handleQR(code.data);
+        }
+      }
+    }
+  }
+  requestAnimationFrame(scanLoop);
+}
+
+function flashCamera(){
+  const wrap = document.getElementById('videoWrap');
+  const f = document.createElement('div');
+  f.className = 'qr-flash';
+  wrap.appendChild(f);
+  setTimeout(() => f.remove(), 600);
+}
+
+function handleQR(data){
+  qrContent.classList.add('filled');
+  qrContent.innerHTML = '';
+
+  let url;
+  try{ url = new URL(data); }catch(e){ url = null; }
+
+  if(!url){
+    qrContent.innerHTML = `<div class="qr-link">読み取り内容: ${escapeHtml(data)}</div>`;
+    return;
+  }
+
+  const href = url.href;
+  const isYouTube = /youtube\.com|youtu\.be/.test(url.hostname);
+  const isVideoFile = /\.(mp4|webm|ogg)$/i.test(url.pathname);
+  const isAudioFile = /\.(mp3|wav|m4a|ogg)$/i.test(url.pathname);
+
+  if(isYouTube){
+    let vid = url.searchParams.get('v');
+    if(!vid && url.hostname.includes('youtu.be')) vid = url.pathname.slice(1);
+    const embed = document.createElement('iframe');
+    embed.src = `https://www.youtube.com/embed/${vid}?autoplay=1`;
+    embed.allow = 'autoplay; encrypted-media';
+    embed.allowFullscreen = true;
+    qrContent.appendChild(embed);
+  } else if(isVideoFile){
+    const v = document.createElement('video');
+    v.src = href; v.controls = true; v.autoplay = true;
+    qrContent.appendChild(v);
+    v.play().catch(()=>addPlayFallback(v));
+  } else if(isAudioFile){
+    const a = document.createElement('audio');
+    a.src = href; a.controls = true; a.autoplay = true;
+    qrContent.appendChild(a);
+    a.play().catch(()=>addPlayFallback(a));
+  } else {
+    const link = document.createElement('div');
+    link.innerHTML = `教材リンクを検出しました：<br><a class="qr-link" href="${href}" target="_blank" rel="noopener">${href}</a>`;
+    qrContent.appendChild(link);
+  }
+}
+
+function addPlayFallback(mediaEl){
+  const btn = document.createElement('button');
+  btn.className = 'btn amber';
+  btn.style.marginTop = '10px';
+  btn.textContent = '▶ 再生する（タップしてね）';
+  btn.onclick = () => { mediaEl.play(); btn.remove(); };
+  qrContent.appendChild(btn);
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------------- OCR ---------------- */
+const ocrText = document.getElementById('ocrText');
+const speakBtn = document.getElementById('speakBtn');
+
+snapBtn.onclick = async () => {
+  if(video.readyState !== video.HAVE_ENOUGH_DATA) return;
+  snapBtn.disabled = true;
+  snapBtn.textContent = '⏳ よみとり中…';
+  ocrText.classList.remove('placeholder');
+  ocrText.textContent = '文字を認識しています…しばらく待ってね';
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  try{
+    const { data } = await Tesseract.recognize(canvas, 'jpn+eng', {
+      logger: m => {
+        if(m.status === 'recognizing text'){
+          snapBtn.textContent = `⏳ よみとり中… ${Math.round(m.progress*100)}%`;
+        }
+      }
+    });
+    const text = (data.text || '').trim();
+    ocrText.textContent = text || '（文字が見つかりませんでした。もう少しカメラに近づけてみてね）';
+    speakBtn.disabled = !text;
+    translateBtn.disabled = !text;
+    translateResult.textContent = 'ボタンを押すと、ここに変換された文が出ます';
+    translateResult.classList.add('placeholder');
+  }catch(e){
+    ocrText.textContent = '読み取りに失敗しました: ' + e.message;
+    console.error(e);
+  }finally{
+    snapBtn.disabled = false;
+    snapBtn.textContent = '📖 よんで（OCR）';
+  }
+};
+
+/* ---------------- Read aloud (TTS) ---------------- */
+let currentLang = 'ja-JP';
+document.querySelectorAll('.lang-toggle button').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.lang-toggle button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentLang = btn.dataset.lang;
+  };
+});
+
+const rateSlider = document.getElementById('rateSlider');
+
+speakBtn.onclick = () => {
+  const text = ocrText.textContent;
+  if(!text) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = currentLang;
+  utter.rate = parseFloat(rateSlider.value);
+  window.speechSynthesis.speak(utter);
+};
+
+/* ---------------- Claude API: 難語だけ日本語パラフレーズ ---------------- */
+const apiKeyInput = document.getElementById('apiKeyInput');
+const gradeSelect = document.getElementById('gradeSelect');
+const translateBtn = document.getElementById('translateBtn');
+const translateResult = document.getElementById('translateResult');
+
+// 保存済みのAPIキー・学年を復元（このブラウザ内だけに保存）
+apiKeyInput.value = localStorage.getItem('aiStudyDesk_apiKey') || '';
+gradeSelect.value = localStorage.getItem('aiStudyDesk_grade') || gradeSelect.value;
+apiKeyInput.addEventListener('change', () => localStorage.setItem('aiStudyDesk_apiKey', apiKeyInput.value));
+gradeSelect.addEventListener('change', () => localStorage.setItem('aiStudyDesk_grade', gradeSelect.value));
+
+translateBtn.onclick = async () => {
+  const text = ocrText.textContent.trim();
+  const apiKey = apiKeyInput.value.trim();
+  const grade = gradeSelect.value;
+
+  if(!text) return;
+  if(!apiKey){
+    translateResult.classList.remove('placeholder');
+    translateResult.textContent = '⚠️ おやモードでClaude APIキーを設定してください';
+    return;
+  }
+
+  translateBtn.disabled = true;
+  translateBtn.textContent = '⏳ へんかん中…';
+  translateResult.classList.remove('placeholder');
+  translateResult.textContent = '考えています…';
+
+  const systemPrompt =
+`あなたは日本の子ども向け英語学習アシスタントです。
+与えられた英文を、次のルールで変換してください。
+
+・対象は「${grade}」の子どもです
+・その学年ではまだ知らなそうな「難しい単語」だけを日本語に置き換えてください
+・簡単な単語（I, am, is, the, a, you, like など基礎単語）はそのまま英語で残してください
+・語順や文の構造は変えないでください（全文翻訳ではありません）
+・説明や前置きは書かず、変換後の文だけを出力してください
+
+例：
+入力: I am a student.
+出力: I am a 学生。
+
+入力: The weather is beautiful today.
+出力: The 天気 is 美しい today。`;
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:400,
+        system: systemPrompt,
+        messages:[{ role:'user', content: text }]
+      })
+    });
+
+    if(!res.ok){
+      const errBody = await res.json().catch(()=>({}));
+      throw new Error(errBody?.error?.message || `HTTPエラー ${res.status}`);
+    }
+
+    const data = await res.json();
+    const out = (data.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n')
+      .trim();
+
+    translateResult.textContent = out || '（変換結果が空でした）';
+  }catch(e){
+    translateResult.textContent = '⚠️ エラー: ' + e.message;
+    console.error(e);
+  }finally{
+    translateBtn.disabled = false;
+    translateBtn.textContent = '🈂️ むずかしい単語だけ日本語に';
+  }
+};
+</script>
+</body>
+</html>
