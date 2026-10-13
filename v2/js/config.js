@@ -1,4 +1,6 @@
 // ===== 設定値はここに集約（数字を変えたいときはこのファイルだけ触ればOK） =====
+export const VERSION = '2.2';
+
 export const CONFIG = {
   // OCR・AIに使うClaudeのモデル
   model: 'claude-sonnet-5-5',

@@ -1,6 +1,6 @@
 // ===== Claude API 担当 =====
 // APIへの通信はすべてこのファイルを通す（将来サーバー経由に変えるときもここだけ直せばOK）
-import { CONFIG } from './config.js';
+import { CONFIG } from './config.js?v=2.2';
 
 export async function callClaude({ apiKey, system, content, maxTokens = 1500 }) {
   if (!apiKey) throw new Error('おやモードでClaude APIキーを設定してください');

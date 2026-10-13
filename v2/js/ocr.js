@@ -1,7 +1,7 @@
 // ===== OCR（文字の読み取り）担当 =====
 // 本命: Claudeの画像読み取り（縦書き・ふりがな・カメラ画像に強い）
 // 予備: Tesseract（APIキーが無いとき用。日本語のカメラ画像はかなり苦手）
-import { callClaude } from './ai.js';
+import { callClaude } from './ai.js?v=2.2';
 
 const OCR_SYSTEM = `あなたは教科書・絵本・問題集の文字を書き起こすOCRです。
 写真に写っている「本文」を、読む順番どおりに正確に書き起こしてください。

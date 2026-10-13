@@ -1,10 +1,10 @@
 // ===== アプリ本体：画面とそれぞれの部品（カメラ・QR・OCR・読み上げ）をつなぐ =====
-import { CONFIG, store } from './config.js';
-import { Camera } from './camera.js';
-import { createQrScanner, classifyQr } from './qr.js';
-import { ocrWithClaude, ocrWithTesseract } from './ocr.js';
-import { speakParagraphs, stopSpeaking, detectLang, voiceSummary } from './speech.js';
-import { easyEnglish } from './ai.js';
+import { CONFIG, store, VERSION } from './config.js?v=2.2';
+import { Camera } from './camera.js?v=2.2';
+import { createQrScanner, classifyQr } from './qr.js?v=2.2';
+import { ocrWithClaude, ocrWithTesseract } from './ocr.js?v=2.2';
+import { speakParagraphs, stopSpeaking, detectLang, voiceSummary } from './speech.js?v=2.2';
+import { easyEnglish } from './ai.js?v=2.2';
 
 const $ = id => document.getElementById(id);
 const el = {
@@ -328,3 +328,6 @@ function escapeHtml(s) {
 
 /* ================= 起動 ================= */
 startCamera();
+
+// 今どの版が動いているか、ロゴの横に小さく表示（更新が反映されたかの確認用）
+el.brand.insertAdjacentHTML('beforeend', ` <small style="font-size:13px;opacity:.6">v${VERSION}</small>`);
