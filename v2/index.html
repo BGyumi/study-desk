@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI学習デスク</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=BIZ+UDGothic:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="child-mode">
+
+<header>
+  <!-- 長押し（1.5秒）でおやモードへ。子どもが誤って入らないように -->
+  <div class="brand" id="brand" title="長押しでおやモード">✏️ AI学習デスク</div>
+  <button class="parent-only btn small" id="backToChild">こどもモードにもどる</button>
+</header>
+
+<main>
+  <!-- 左：カメラ -->
+  <section class="card cam-card">
+    <div class="video-wrap" id="videoWrap">
+      <video id="video" autoplay playsinline muted></video>
+      <div class="guide-frame"></div>
+      <div class="focus-badge" id="focusBadge" hidden>ピント …</div>
+      <div class="overlay" id="overlay">
+        <div class="overlay-main" id="overlayMain">本を置いてください</div>
+        <div class="overlay-sub" id="overlaySub">カメラをじゅんびしています…</div>
+        <button class="btn amber" id="retryCam" hidden>カメラをつなぐ</button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn amber big" id="readBtn" disabled>📖 よんで</button>
+      <button class="btn wood big" id="stopBtn" hidden>⏹ とめる</button>
+    </div>
+    <div class="hint" id="hint"></div>
+  </section>
+
+  <!-- 右：AIサポート -->
+  <section class="card side-card">
+    <div class="qr-panel" id="qrPanel" hidden></div>
+
+    <div class="text-panel" id="textPanel">
+      <div class="placeholder">「よんで」をおすと、ここに文字が出て読みあげるよ<br><small>ききたい段落をタップすると、そこから読むよ</small></div>
+    </div>
+
+    <div class="extra-row" id="extraRow" hidden>
+      <button class="btn small" id="easyBtn">🈂️ むずかしい単語だけ日本語に</button>
+    </div>
+    <div class="easy-result" id="easyResult" hidden></div>
+  </section>
+
+  <!-- おやモード：設定・診断 -->
+  <section class="card parent-only settings">
+    <h2>⚙ おやモード設定</h2>
+
+    <div class="grid2">
+      <div>
+        <h3>カメラ</h3>
+        <label>使うカメラ<select id="camSelect"></select></label>
+        <div id="focusBox"></div>
+        <div id="zoomBox"></div>
+        <p class="diag" id="camInfo"></p>
+      </div>
+
+      <div>
+        <h3>文字の読み取り（OCR）</h3>
+        <label>Claude APIキー<input type="password" id="apiKey" placeholder="sk-ant-..."></label>
+        <label>読み取り方式
+          <select id="ocrEngine">
+            <option value="auto">自動（キーがあればClaude）</option>
+            <option value="claude">Claude（おすすめ）</option>
+            <option value="tesseract">Tesseract（無料・精度低め）</option>
+          </select>
+        </label>
+        <label>学年<select id="grade"></select></label>
+        <p class="note">APIキーはこの端末のブラウザ内だけに保存されます。読み取り1回ごとに少額の利用料がかかります。</p>
+      </div>
+
+      <div>
+        <h3>読み上げ</h3>
+        <label>はやさ <span id="rateVal"></span>
+          <input type="range" id="rate" min="0.5" max="1.4" step="0.05">
+        </label>
+        <p class="diag" id="voiceInfo"></p>
+      </div>
+
+      <div>
+        <h3>診断</h3>
+        <p class="diag" id="qrInfo"></p>
+        <p class="diag"><a href="../">旧バージョンを開く</a></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
