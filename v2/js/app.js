@@ -46,8 +46,11 @@ const showRate = () => (el.rateVal.textContent = `×${Number(el.rate.value).toFi
 showRate();
 
 el.grade.onchange = () => store.set('grade', el.grade.value);
-el.apiKey.onchange = () => store.set('apiKey', el.apiKey.value.trim());
-el.ocrEngine.onchange = () => store.set('ocrEngine', el.ocrEngine.value);
+el.apiKey.onchange = () => { store.set('apiKey', el.apiKey.value.trim()); updateReadBtn(); };
+// OCRはAPIキーを入れたときだけ子どもに見せる（キー無しの無料OCRは精度が低く、混乱のもとになるため）
+function updateReadBtn() { el.readBtn.hidden = !el.apiKey.value.trim() && el.ocrEngine.value !== 'tesseract'; }
+updateReadBtn();
+el.ocrEngine.onchange = () => { store.set('ocrEngine', el.ocrEngine.value); updateReadBtn(); };
 el.rate.oninput = () => { store.set('rate', el.rate.value); showRate(); };
 
 /* ================= カメラ ================= */
@@ -132,7 +135,7 @@ setInterval(() => {
   const [cls, label] = s >= CONFIG.sharpGood ? ['good', 'ピント ◎'] : s >= CONFIG.sharpOk ? ['ok', 'ピント ○'] : ['bad', 'ピント ×'];
   el.focusBadge.className = 'focus-badge ' + cls;
   el.focusBadge.textContent = label;
-  if (!document.body.classList.contains('child-mode')) refreshCamInfo();
+  if (!document.body.classList.contains('child-mode')) refreshDiagnostics();
 }, 400);
 
 /* ================= QRコード（常に自動で探す） ================= */
@@ -143,13 +146,25 @@ createQrScanner().then(s => { qr = s; refreshDiagnostics(); qrLoop(); })
 async function qrLoop() {
   if (camera.ready && !state.busy) {
     try {
-      const text = await qr.detect(el.video);
-      if (text && (text !== state.lastQr || Date.now() - state.lastQrAt > CONFIG.qrCooldownMs)) {
+      const r = await qr.detect(el.video);
+      state.qrTries = (state.qrTries || 0) + 1;
+      const text = r?.text;
+      const isUrl = text && /^https?:\/\//i.test(text);
+      const parent = !document.body.classList.contains('child-mode');
+      if (text && (isUrl || parent) && (text !== state.lastQr || Date.now() - state.lastQrAt > CONFIG.qrCooldownMs)) {
         state.lastQr = text; state.lastQrAt = Date.now();
+        state.qrHits = (state.qrHits || 0) + 1;
         flash();
         showQr(text);
+        el.hint.textContent = '';
+      } else if (r?.seen && Date.now() - state.lastQrAt > 2000) {
+        // QRらしきものは見えているのに読めない → 子どもに分かる言葉で伝える
+        el.hint.textContent = 'QRコードが見えたよ！もう少し大きく・まっすぐうつしてね';
+        state.seenAt = Date.now();
+      } else if (state.seenAt && Date.now() - state.seenAt > 3000 && el.hint.textContent.startsWith('QR')) {
+        el.hint.textContent = '';
       }
-    } catch { /* 1回失敗しても次で拾う */ }
+    } catch (e) { state.qrError = e.message; }
   }
   setTimeout(qrLoop, CONFIG.qrIntervalMs);
 }
@@ -303,7 +318,8 @@ function refreshCamInfo() {
 function refreshDiagnostics() {
   refreshCamInfo();
   el.voiceInfo.textContent = '声: ' + voiceSummary();
-  el.qrInfo.textContent = 'QR読み取り: ' + (qr?.engine || '準備中…');
+  el.qrInfo.textContent = 'QR読み取り: ' + (qr?.engine || '準備中…') +
+    ` ／ 試行 ${state.qrTries || 0}回・成功 ${state.qrHits || 0}回` + (state.qrError ? ` ／ エラー: ${state.qrError}` : '');
 }
 
 function escapeHtml(s) {
