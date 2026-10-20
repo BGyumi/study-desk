@@ -15,7 +15,7 @@ export function route({ raw, usText }) {
 }
 
 export function classify(text) {
-  if (/^SD-[A-Z0-9-]+$/.test(text)) return { type: 'card', id: text };
+  if (/^SD-[A-Z0-9-]+$/i.test(text)) return { type: 'card', id: text.toUpperCase() };   // 大文字小文字どちらでもOK
   if (/^97[89]\d{10}$/.test(text)) return { type: 'isbn', isbn: text };
 
   let url;

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=4.2">
+<link rel="stylesheet" href="css/style.css?v=4.3">
 </head>
 <body class="child-mode">
 
@@ -23,8 +23,12 @@
         <div class="sub" id="sub">QRコードを読み取ってください</div>
       </div>
       <button class="act" id="act" hidden></button>
+      <div class="kid" id="kidChip" hidden></div>
       <div class="ready" id="ready"><i></i><span id="readyText">読み取り待ち</span></div>
       <div class="icons">
+        <button class="icon" id="shelfBtn" aria-label="どくしょつうちょう">
+          <svg viewBox="0 0 24 24"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v15H6.5A2.5 2.5 0 0 0 4 20.5 2.5 2.5 0 0 0 6.5 23H19v-5"/><path d="M8 7h7"/></svg>
+        </button>
         <button class="icon" id="histBtn" aria-label="りれき">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
         </button>
@@ -36,6 +40,12 @@
       <div class="drop-head">さいきんひらいた教材</div>
       <ul class="hist-list" id="histList"></ul>
       <div class="drop-foot">もう一度ひらくには、教材をクリック</div>
+    </div>
+
+    <!-- 読書通帳（本ボタンで開く） -->
+    <div class="drop" id="shelf" style="--tip:115px; margin:14px 0 0 80px" hidden>
+      <div class="drop-head" id="shelfHead">どくしょ通帳</div>
+      <div id="shelfBody"></div>
     </div>
 
     <!-- YouTube・音声はここで再生 -->
@@ -71,6 +81,28 @@
     </section>
 
     <section class="card wide">
+      <h3>読書通帳</h3>
+      <p class="note">名前はこの端末の中だけに保存されます。<a href="cards.html" target="_blank">なまえカードを印刷する</a></p>
+      <div class="kid-names" id="kidNames"></div>
+      <h3 style="margin-top:18px">さいきんの記録</h3>
+      <ul class="list" id="readList"></ul>
+      <form class="row" id="readForm">
+        <select id="readKid"></select>
+        <input id="readTitle" placeholder="本の名前（バーコードが読めない本を手で追加）" autocomplete="off">
+        <button class="btn" type="submit">追加</button>
+      </form>
+    </section>
+
+    <section class="card wide">
+      <h3>バックアップ</h3>
+      <p class="note">読書通帳・履歴・設定をファイルに保存します。ブラウザのデータを消す前や、月に1回くらい保存しておくと安心です。</p>
+      <div class="row">
+        <button class="btn" id="backupBtn" type="button">バックアップを保存</button>
+        <label class="btn ghost" style="cursor:pointer">ファイルから戻す<input type="file" id="restoreFile" accept=".json,application/json" hidden></label>
+      </div>
+    </section>
+
+    <section class="card wide">
       <h3>スキャナー確認</h3>
       <p class="note">
         スキャナーで何か読むと、ここに出ます。<b>「そのまま」と「US配列で復元」が違う</b>ときは、PCの配列ずれが起きています（アプリ側で自動補正済み）。
@@ -92,6 +124,6 @@
   </div>
 </main>
 
-<script type="module" src="js/app.js?v=4.2"></script>
+<script type="module" src="js/app.js?v=4.3"></script>
 </body>
 </html>
