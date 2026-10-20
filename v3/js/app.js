@@ -1,9 +1,9 @@
 // ===== アプリ本体：スキャナー → 振り分け → 表示 をつなぐ =====
-import { CONFIG, VERSION } from './config.js?v=3.1';
-import { startScanner } from './scanner.js?v=3.1';
-import { route, classify } from './router.js?v=3.1';
-import { allow, pending } from './allow.js?v=3.1';
-import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=3.1';
+import { CONFIG, VERSION } from './config.js?v=3.2';
+import { startScanner } from './scanner.js?v=3.2';
+import { route, classify } from './router.js?v=3.2';
+import { allow, pending } from './allow.js?v=3.2';
+import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=3.2';
 
 const $ = id => document.getElementById(id);
 const el = {

@@ -1,5 +1,5 @@
 // ===== 設定値はここに集約（数字を変えたいときはこのファイルだけ触ればOK） =====
-export const VERSION = '3.1';
+export const VERSION = '3.2';
 
 export const CONFIG = {
   // スキャナー判定：1文字ごとの間隔がこれ以下なら「スキャナーの入力」とみなす（ミリ秒）
@@ -11,6 +11,9 @@ export const CONFIG = {
 
   // 同じQRを続けて読んだとき、無視する時間（ミリ秒）
   sameScanCooldownMs: 3000,
+
+  // 許可サイトの機能：false＝いったんOFF（どのサイトのQRでも開く）。おやモードのスイッチでいつでも戻せる
+  allowListOn: false,
 
   // 最初から許可しておくサイト（おやモードで追加・削除できる）
   defaultAllow: ['youtube.com', 'youtu.be', 'studysapuri.jp', 'littlefox.com'],

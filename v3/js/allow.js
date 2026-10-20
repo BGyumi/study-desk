@@ -1,6 +1,6 @@
 // ===== 許可サイト（ホワイトリスト）と承認待ち =====
 // 子どもが読んだQRでも、許可したサイトだけ開く。それ以外は「承認待ち」に入れて、おやモードで決める。
-import { CONFIG, store } from './config.js?v=3.1';
+import { CONFIG, store } from './config.js?v=3.2';
 
 const KEY_ALLOW = 'allow', KEY_PENDING = 'pending';
 
@@ -23,8 +23,9 @@ export const allow = {
   },
 
   // おやモードの「許可サイト以外も開く」
-  openAll() { return store.get('openAll', false); },
-  setOpenAll(on) { store.set('openAll', !!on); },
+  // 保存名を変えて、v3.2からは初期値（CONFIG.allowListOn）が必ず効くようにしている
+  openAll() { return store.get('openAll32', !CONFIG.allowListOn); },
+  setOpenAll(on) { store.set('openAll32', !!on); },
 
   remove(domain) { store.set(KEY_ALLOW, this.list().filter(d => d !== domain)); },
 };
