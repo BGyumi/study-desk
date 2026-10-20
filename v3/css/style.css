@@ -1,0 +1,93 @@
+:root{
+  --paper:#F6F1E7; --card:#fff; --line:#E6DECD; --ink:#2B2A33; --mute:#8A8270;
+  --orange:#E07A4F; --orange-soft:#FBE6DC; --orange-deep:#C15B2F;
+  --green:#4F9A7E; --green-soft:#DDEEE6;
+  --dark:#2B2A33; --radius:26px;
+}
+*{box-sizing:border-box;}
+[hidden]{display:none !important;}
+html,body{margin:0;height:100%;}
+body{
+  font-family:'BIZ UDGothic','Hiragino Sans',sans-serif;
+  background:var(--paper); color:var(--ink); font-size:20px; line-height:1.6;
+  display:flex; flex-direction:column;
+}
+h2,h3,.brand,.btn,.big-msg,.title{font-family:'Zen Maru Gothic',sans-serif;}
+
+header{display:flex; align-items:center; justify-content:space-between; padding:14px 32px;}
+.brand{font-size:20px; font-weight:700; color:var(--mute); user-select:none; -webkit-user-select:none; cursor:default;}
+.brand small{font-size:13px; opacity:.7;}
+.brand.pressing{opacity:.4;}
+.scanner-dot{font-size:14px; color:var(--mute);}
+.scanner-dot.on{color:var(--green);}
+
+/* ===== こどもモード ===== */
+.child{flex:1; display:grid; grid-template-columns:1fr 1.1fr; gap:26px; padding:0 32px 32px; min-height:0;}
+.status,.media{border-radius:var(--radius); min-height:0;}
+.status{background:var(--card); padding:40px; display:flex; flex-direction:column; justify-content:center; gap:18px;}
+.media{background:var(--dark); padding:22px; display:flex; flex-direction:column; gap:12px;}
+.media-label{color:#CFC8B8; font-size:15px;}
+.media-panel{flex:1; border-radius:16px; background:#3A3946; overflow:hidden; display:flex; align-items:center; justify-content:center;}
+.media-panel iframe{width:100%; height:100%; border:none;}
+.media-panel video{width:100%; max-height:100%;}
+.media-panel audio{width:90%;}
+.placeholder{color:#8E889C; font-size:18px; text-align:center; padding:20px;}
+
+/* 状態表示の部品 */
+.pill{align-self:flex-start; border-radius:99px; padding:6px 18px; font-size:17px; font-weight:700;}
+.pill.ok{background:var(--orange-soft); color:var(--orange-deep);}
+.pill.wait{background:#EFE9DC; color:var(--mute);}
+.big-msg{font-size:52px; font-weight:900; line-height:1.3; letter-spacing:.02em;}
+.big-msg em{font-style:normal; color:var(--orange);}
+.sub{font-size:22px; color:var(--mute);}
+.title{font-size:36px; font-weight:900; line-height:1.3; word-break:break-all;}
+.scanner-pic{width:170px; align-self:center; margin-bottom:6px;}
+
+.btn{
+  font-weight:700; font-size:18px; padding:12px 22px; border:none; border-radius:14px;
+  cursor:pointer; color:#fff; background:var(--green); box-shadow:0 4px 0 rgba(0,0,0,.08);
+}
+.btn:active{transform:translateY(2px); box-shadow:none;}
+.btn.dark{background:var(--dark);}
+.btn.ghost{background:#EFE9DC; color:var(--ink);}
+.btn.orange{background:var(--orange);}
+.btn.big{font-size:28px; padding:20px 30px; border-radius:22px;}
+.btn-row{display:flex; gap:14px; flex-wrap:wrap;}
+
+/* ピッ した瞬間のフラッシュ */
+.flash{position:fixed; inset:0; pointer-events:none; border:10px solid var(--orange); animation:flash .7s ease-out forwards;}
+@keyframes flash{to{opacity:0;}}
+
+/* ===== おやモード ===== */
+.parent{flex:1; padding:0 32px 32px; overflow:auto;}
+.parent-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;}
+.parent-head h2{margin:0; font-size:28px;}
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+.card{background:var(--card); border-radius:20px; padding:22px 24px;}
+.card.wide{grid-column:1/-1;}
+.card h3{margin:0 0 4px; font-size:20px;}
+.note{font-size:14px; color:var(--mute); margin:0 0 12px;}
+.note a{color:var(--green);}
+.list{list-style:none; margin:0 0 12px; padding:0; display:flex; flex-direction:column; gap:8px;}
+.list li{display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--paper); border-radius:12px; padding:10px 14px; font-size:16px;}
+.list li .meta{font-size:12px; color:var(--mute); word-break:break-all;}
+.list li .btns{display:flex; gap:6px; flex-shrink:0;}
+.list li .btn{font-size:14px; padding:6px 12px;}
+.list .empty{color:var(--mute); background:none; padding:4px 0;}
+.row{display:flex; gap:10px;}
+.row input{flex:1; font:inherit; font-size:16px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:var(--paper);}
+.scanlog{width:100%; border-collapse:collapse; font-size:14px;}
+.scanlog th{text-align:left; color:var(--mute); font-weight:400; padding:6px 8px; border-bottom:1px solid var(--line);}
+.scanlog td{padding:8px; border-bottom:1px solid var(--line); word-break:break-all; font-family:ui-monospace,monospace;}
+.scanlog td.diff{color:var(--orange-deep); font-weight:700;}
+.scanlog td.empty{color:var(--mute); font-family:inherit;}
+.tag{display:inline-block; font-family:'BIZ UDGothic',sans-serif; font-size:12px; padding:2px 8px; border-radius:99px; background:#EFE9DC;}
+
+body.child-mode .parent-only{display:none !important;}
+body:not(.child-mode) .child{display:none !important;}
+
+@media (max-width:900px){
+  .child{grid-template-columns:1fr;}
+  .grid{grid-template-columns:1fr;}
+  .big-msg{font-size:38px;}
+}

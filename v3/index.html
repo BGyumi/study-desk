@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI学習デスク</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=BIZ+UDGothic:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=3.0">
+</head>
+<body class="child-mode">
+
+<header>
+  <!-- 長押し（1.5秒）でおやモードへ -->
+  <div class="brand" id="brand">✏️ AI学習デスク <small id="ver"></small></div>
+  <div class="scanner-dot" id="scannerDot" title="さいごに読んだ時刻">● スキャナー まち</div>
+</header>
+
+<!-- ===== こどもモード ===== -->
+<main class="child" id="child">
+  <section class="status" id="status">
+    <!-- app.js が状態ごとに中身を入れかえる -->
+  </section>
+
+  <section class="media" id="mediaWrap">
+    <div class="media-label" id="mediaLabel">QR の おんせい・どうが</div>
+    <div class="media-panel" id="media">
+      <div class="placeholder">ここに どうがや おんせいが でるよ</div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== おやモード ===== -->
+<main class="parent parent-only" id="parent">
+  <div class="parent-head">
+    <h2>おやモード</h2>
+    <button class="btn dark" id="backToChild">こどもモードにもどる</button>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h3>承認待ちのQR</h3>
+      <p class="note">子どもが読んだけど、まだ許可していないサイトです。</p>
+      <ul class="list" id="pendingList"></ul>
+    </section>
+
+    <section class="card">
+      <h3>許可サイト</h3>
+      <p class="note">ここにあるサイトのQRだけ開きます（サブドメインも含む）。</p>
+      <ul class="list" id="allowList"></ul>
+      <form class="row" id="allowForm">
+        <input id="allowInput" placeholder="例：tokyo-shoseki.co.jp" autocomplete="off">
+        <button class="btn" type="submit">追加</button>
+      </form>
+    </section>
+
+    <section class="card wide">
+      <h3>スキャナー確認</h3>
+      <p class="note">
+        スキャナーで何か読むと、ここに出ます。<b>「そのまま」と「US配列で復元」が違う</b>ときは、PCの配列ずれが起きています（アプリ側で自動補正済み）。
+      </p>
+      <table class="scanlog">
+        <thead><tr><th>時刻</th><th>そのまま（e.key）</th><th>US配列で復元</th><th>判定</th></tr></thead>
+        <tbody id="scanLog"><tr><td colspan="4" class="empty">まだ読んでいません</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="card wide">
+      <h3>スキャナーなしで試す</h3>
+      <form class="row" id="testForm">
+        <input id="testInput" placeholder="URLを貼りつけ（例：https://www.youtube.com/watch?v=...）" autocomplete="off">
+        <button class="btn" type="submit">読んだことにする</button>
+      </form>
+      <p class="note">本文の読み上げ（カメラ＋OCR）は今まで通り <a href="../v2/">v2</a> で使えます。</p>
+    </section>
+  </div>
+</main>
+
+<script type="module" src="js/app.js?v=3.0"></script>
+</body>
+</html>
