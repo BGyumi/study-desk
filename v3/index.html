@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=BIZ+UDGothic:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=3.0">
+<link rel="stylesheet" href="css/style.css?v=3.1">
 </head>
 <body class="child-mode">
 
@@ -48,6 +48,7 @@
     <section class="card">
       <h3>許可サイト</h3>
       <p class="note">ここにあるサイトのQRだけ開きます（サブドメインも含む）。</p>
+      <label class="toggle"><input type="checkbox" id="openAll"> 許可サイト以外のQRも開く（承認待ちにせず、そのままタブで開く）</label>
       <ul class="list" id="allowList"></ul>
       <form class="row" id="allowForm">
         <input id="allowInput" placeholder="例：tokyo-shoseki.co.jp" autocomplete="off">
@@ -77,6 +78,6 @@
   </div>
 </main>
 
-<script type="module" src="js/app.js?v=3.0"></script>
+<script type="module" src="js/app.js?v=3.1"></script>
 </body>
 </html>

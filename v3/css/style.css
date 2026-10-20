@@ -91,3 +91,5 @@ body:not(.child-mode) .child{display:none !important;}
   .grid{grid-template-columns:1fr;}
   .big-msg{font-size:38px;}
 }
+.toggle{display:flex; gap:8px; align-items:center; font-size:15px; margin:0 0 12px; cursor:pointer;}
+.toggle input{width:20px; height:20px; accent-color:var(--green);}

@@ -1,6 +1,6 @@
 // ===== 許可サイト（ホワイトリスト）と承認待ち =====
 // 子どもが読んだQRでも、許可したサイトだけ開く。それ以外は「承認待ち」に入れて、おやモードで決める。
-import { CONFIG, store } from './config.js?v=3.0';
+import { CONFIG, store } from './config.js?v=3.1';
 
 const KEY_ALLOW = 'allow', KEY_PENDING = 'pending';
 
@@ -9,6 +9,7 @@ export const allow = {
 
   // サブドメインも含めて許可（例：studysapuri.jp を許可 → learn.studysapuri.jp もOK）
   isAllowed(host) {
+    if (this.openAll()) return true;
     return this.list().some(d => host === d || host.endsWith('.' + d));
   },
 
@@ -20,6 +21,10 @@ export const allow = {
     pending.removeHost(d);
     return true;
   },
+
+  // おやモードの「許可サイト以外も開く」
+  openAll() { return store.get('openAll', false); },
+  setOpenAll(on) { store.set('openAll', !!on); },
 
   remove(domain) { store.set(KEY_ALLOW, this.list().filter(d => d !== domain)); },
 };

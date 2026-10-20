@@ -1,16 +1,16 @@
 // ===== アプリ本体：スキャナー → 振り分け → 表示 をつなぐ =====
-import { CONFIG, VERSION } from './config.js?v=3.0';
-import { startScanner } from './scanner.js?v=3.0';
-import { route, classify } from './router.js?v=3.0';
-import { allow, pending } from './allow.js?v=3.0';
-import { showMedia, openPopup, closeMedia } from './media.js?v=3.0';
+import { CONFIG, VERSION } from './config.js?v=3.1';
+import { startScanner } from './scanner.js?v=3.1';
+import { route, classify } from './router.js?v=3.1';
+import { allow, pending } from './allow.js?v=3.1';
+import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=3.1';
 
 const $ = id => document.getElementById(id);
 const el = {
   brand: $('brand'), ver: $('ver'), dot: $('scannerDot'),
   status: $('status'), media: $('media'), mediaLabel: $('mediaLabel'),
   back: $('backToChild'), pendingList: $('pendingList'), allowList: $('allowList'),
-  allowForm: $('allowForm'), allowInput: $('allowInput'),
+  allowForm: $('allowForm'), openAll: $('openAll'), allowInput: $('allowInput'),
   scanLog: $('scanLog'), testForm: $('testForm'), testInput: $('testInput'),
 };
 el.ver.textContent = 'v' + VERSION;
@@ -38,9 +38,10 @@ const screens = {
     <div class="sub">本を 見ながら きいてね</div>
     <div class="btn-row"><button class="btn ghost big" data-act="close">とじる</button></div>`,
 
-  popup: r => `
+  tab: r => `
     <div class="pill ok">ピッ しました ✓</div>
-    <div class="big-msg" style="font-size:40px">みぎの まどで<br>ひらいたよ</div>
+    <div class="big-msg" style="font-size:40px">あたらしい タブで<br>ひらいたよ</div>
+    <div class="sub">おわったら その タブを とじてね。ここに もどるよ</div>
     <div class="title" style="font-size:22px">${esc(r.host)}</div>
     <div class="btn-row">
       <button class="btn orange big" data-act="reopen">もういちど ひらく</button>
@@ -78,7 +79,7 @@ function render(name, arg) {
 el.status.addEventListener('click', e => {
   const act = e.target.closest('[data-act]')?.dataset.act;
   if (act === 'close') goIdle();
-  if (act === 'reopen' && current) render(openPopup(current.url) ? 'popup' : 'blockedPopup', current);
+  if (act === 'reopen' && current) render(openTab(current.url) ? 'tab' : 'blockedPopup', current);
 });
 
 function goIdle() {
@@ -117,8 +118,8 @@ function handleScan(scan) {
     current = r;
     const { opened } = showMedia(el.media, r);
     if (opened === 'panel') return render('panel', r);
-    el.media.innerHTML = `<div class="placeholder">みぎの まどに ひょうじ中</div>`;
-    return render(opened === 'popup' ? 'popup' : 'blockedPopup', r);
+    el.media.innerHTML = `<div class="placeholder">あたらしい タブで ひょうじ中</div>`;
+    return render(opened === 'tab' ? 'tab' : 'blockedPopup', r);
   }
 
   beep(true); flash();
@@ -129,6 +130,11 @@ function handleScan(scan) {
 }
 
 startScanner(handleScan);
+
+// 教材タブを閉じたら、最初の画面に自動でもどる
+setInterval(() => {
+  if (current?.kind === 'page' && tabClosed() && !isParent()) goIdle();
+}, 1000);
 
 /* ================= おやモード ================= */
 let pressTimer = null;
@@ -149,6 +155,7 @@ function setParent(on) {
 }
 
 function refreshParent() {
+  el.openAll.checked = allow.openAll();
   const p = pending.list();
   el.pendingList.innerHTML = p.length ? p.map(x => `
     <li><div><b>${esc(x.host)}</b><div class="meta">${esc(x.url)}</div></div>
@@ -175,6 +182,8 @@ el.allowList.addEventListener('click', e => {
   const d = e.target.dataset.del;
   if (d && confirm(`${d} を許可サイトから外しますか？`)) { allow.remove(d); refreshParent(); }
 });
+el.openAll.onchange = () => allow.setOpenAll(el.openAll.checked);
+
 el.allowForm.onsubmit = e => {
   e.preventDefault();
   if (!allow.add(el.allowInput.value)) return alert('サイトの形になっていません（例：example.com）');

@@ -1,9 +1,7 @@
 // ===== 右側の表示担当：YouTube・音声・動画・ページを開く =====
-import { CONFIG } from './config.js?v=3.0';
+let tab = null;   // 教材ページ用のタブは1つだけを使い回す（タブが増えないように）
 
-let popup = null;   // 別ウィンドウは1つだけを使い回す（増えないように）
-
-// panel に表示する。ページ型は別ウィンドウ。戻り値：{ opened: 'panel' | 'popup' | 'blocked' }
+// panel に表示する。ふつうのページ（HTML）は新しいタブ。戻り値：{ opened: 'panel' | 'tab' | 'blocked' }
 export function showMedia(panel, r) {
   panel.innerHTML = '';
 
@@ -22,23 +20,25 @@ export function showMedia(panel, r) {
     return { opened: 'panel' };
   }
 
-  // 多くの教材サイトは埋め込みを禁止しているので、画面の右半分に別ウィンドウで開く
-  return { opened: openPopup(r.url) ? 'popup' : 'blocked' };
+  // 教材のHTMLページは埋め込みを禁止していることが多いので、新しいタブで開く
+  return { opened: openTab(r.url) ? 'tab' : 'blocked' };
 }
 
-export function openPopup(url) {
-  const w = Math.round(screen.availWidth * CONFIG.popupRatio);
-  const feat = `popup,left=${screen.availWidth - w},top=0,width=${w},height=${screen.availHeight}`;
+// 同じ名前のタブを使い回す：2回目以降は新しいタブが増えず、前の教材タブの中身が切り替わる
+export function openTab(url) {
   try {
-    if (popup && !popup.closed) { popup.location.href = url; popup.focus(); return true; }
-    popup = window.open(url, 'studydesk-media', feat);
-    return !!popup;
+    tab = window.open(url, 'studydesk-media');
+    if (tab) tab.focus();
+    return !!tab;
   } catch { return false; }
 }
+
+// 教材タブが閉じられたか（閉じたら、こどもモードを最初の画面に戻すため）
+export const tabClosed = () => !tab || tab.closed;
 
 export function closeMedia(panel) {
   panel.querySelectorAll('audio,video').forEach(m => m.pause());
   panel.innerHTML = '';
-  if (popup && !popup.closed) popup.close();
-  popup = null;
+  if (tab && !tab.closed) tab.close();
+  tab = null;
 }

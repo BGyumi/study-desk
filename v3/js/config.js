@@ -1,5 +1,5 @@
 // ===== 設定値はここに集約（数字を変えたいときはこのファイルだけ触ればOK） =====
-export const VERSION = '3.0';
+export const VERSION = '3.1';
 
 export const CONFIG = {
   // スキャナー判定：1文字ごとの間隔がこれ以下なら「スキャナーの入力」とみなす（ミリ秒）
@@ -14,9 +14,6 @@ export const CONFIG = {
 
   // 最初から許可しておくサイト（おやモードで追加・削除できる）
   defaultAllow: ['youtube.com', 'youtu.be', 'studysapuri.jp', 'littlefox.com'],
-
-  // 別ウィンドウで開くときの大きさ（画面の右半分）
-  popupRatio: 0.5,
 };
 
 // ===== ブラウザ内保存（localStorage）の小さなヘルパー =====
