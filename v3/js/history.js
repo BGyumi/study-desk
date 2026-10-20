@@ -1,5 +1,5 @@
 // ===== 履歴：さいきん開いた教材（この端末のブラウザ内に保存） =====
-import { store } from './config.js?v=4.1';
+import { store } from './config.js?v=4.2';
 
 const KEY = 'history', MAX = 20;
 
