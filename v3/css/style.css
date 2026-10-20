@@ -23,7 +23,8 @@ button{font:inherit; color:inherit;}
 /* ===== こどもモード ===== */
 .child{max-width:1000px; margin:0 auto; padding:32px 24px 60px;}
 .logo{display:flex; align-items:baseline; gap:14px; margin-bottom:28px; flex-wrap:wrap;}
-.logo b{font-size:34px; font-weight:900; letter-spacing:.02em;}
+.logo b{font-size:34px; font-weight:900; letter-spacing:.02em; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; cursor:default; transition:opacity 1.5s;}
+.logo b.pressing{opacity:.35;}
 .logo span{font-size:12px; letter-spacing:.32em; color:var(--mute); font-weight:700;}
 .logo small{font-size:11px; color:var(--line); margin-left:auto;}
 

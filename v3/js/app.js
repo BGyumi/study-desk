@@ -1,16 +1,16 @@
 // ===== アプリ本体：スキャナー → 振り分け → 表示 をつなぐ =====
-import { CONFIG, VERSION } from './config.js?v=4.0';
-import { startScanner } from './scanner.js?v=4.0';
-import { route, classify } from './router.js?v=4.0';
-import { allow, pending } from './allow.js?v=4.0';
-import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=4.0';
-import { history, siteName, whenLabel, youtubeTitle, pageHint } from './history.js?v=4.0';
+import { CONFIG, VERSION } from './config.js?v=4.1';
+import { startScanner } from './scanner.js?v=4.1';
+import { route, classify } from './router.js?v=4.1';
+import { allow, pending } from './allow.js?v=4.1';
+import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=4.1';
+import { history, siteName, whenLabel, youtubeTitle, pageHint } from './history.js?v=4.1';
 
 const $ = id => document.getElementById(id);
 const el = {
   ver: $('ver'), fox: $('fox'), title: $('title'), sub: $('sub'), act: $('act'),
   ready: $('ready'), readyText: $('readyText'),
-  histBtn: $('histBtn'), gearBtn: $('gearBtn'), hist: $('hist'), histList: $('histList'),
+  histBtn: $('histBtn'), brand: $('brand'), hist: $('hist'), histList: $('histList'),
   mediaDrop: $('mediaDrop'), media: $('media'),
   back: $('backToChild'), pendingList: $('pendingList'), allowList: $('allowList'),
   allowForm: $('allowForm'), openAll: $('openAll'), allowInput: $('allowInput'),
@@ -158,11 +158,20 @@ el.histList.addEventListener('click', e => {
   if (r.type === 'url') { flash(); openItem({ ...r, title: h.title }); }
 });
 
-/* ================= おやモード（歯車ボタン） ================= */
-el.gearBtn.onclick = () => setParent(true);
+/* ================= おやモード（ロゴ「ピッとマナビ」を1.5秒長押し） ================= */
+let pressTimer = null;
+el.brand.addEventListener('pointerdown', () => {
+  el.brand.classList.add('pressing');
+  pressTimer = setTimeout(() => setParent(true), 1500);
+});
+['pointerup', 'pointerleave', 'pointercancel'].forEach(t => el.brand.addEventListener(t, () => {
+  el.brand.classList.remove('pressing'); clearTimeout(pressTimer);
+}));
+el.brand.addEventListener('contextmenu', e => e.preventDefault());   // 長押しでメニューが出ないように
 el.back.onclick = () => setParent(false);
 
 function setParent(on) {
+  el.brand.classList.remove('pressing');
   document.body.classList.toggle('child-mode', !on);
   el.hist.hidden = true; el.histBtn.classList.remove('on');
   if (on) { closeMedia(el.media); refreshParent(); }

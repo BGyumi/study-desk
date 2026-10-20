@@ -1,6 +1,6 @@
 // ===== 許可サイト（ホワイトリスト）と承認待ち =====
 // 子どもが読んだQRでも、許可したサイトだけ開く。それ以外は「承認待ち」に入れて、おやモードで決める。
-import { CONFIG, store } from './config.js?v=4.0';
+import { CONFIG, store } from './config.js?v=4.1';
 
 const KEY_ALLOW = 'allow', KEY_PENDING = 'pending';
 
