@@ -1,92 +1,72 @@
 // ===== アプリ本体：スキャナー → 振り分け → 表示 をつなぐ =====
-import { CONFIG, VERSION } from './config.js?v=3.2';
-import { startScanner } from './scanner.js?v=3.2';
-import { route, classify } from './router.js?v=3.2';
-import { allow, pending } from './allow.js?v=3.2';
-import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=3.2';
+import { CONFIG, VERSION } from './config.js?v=4.0';
+import { startScanner } from './scanner.js?v=4.0';
+import { route, classify } from './router.js?v=4.0';
+import { allow, pending } from './allow.js?v=4.0';
+import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=4.0';
+import { history, siteName, whenLabel, youtubeTitle, pageHint } from './history.js?v=4.0';
 
 const $ = id => document.getElementById(id);
 const el = {
-  brand: $('brand'), ver: $('ver'), dot: $('scannerDot'),
-  status: $('status'), media: $('media'), mediaLabel: $('mediaLabel'),
+  ver: $('ver'), fox: $('fox'), title: $('title'), sub: $('sub'), act: $('act'),
+  ready: $('ready'), readyText: $('readyText'),
+  histBtn: $('histBtn'), gearBtn: $('gearBtn'), hist: $('hist'), histList: $('histList'),
+  mediaDrop: $('mediaDrop'), media: $('media'),
   back: $('backToChild'), pendingList: $('pendingList'), allowList: $('allowList'),
   allowForm: $('allowForm'), openAll: $('openAll'), allowInput: $('allowInput'),
   scanLog: $('scanLog'), testForm: $('testForm'), testInput: $('testInput'),
 };
 el.ver.textContent = 'v' + VERSION;
 
+const FOX = { sleep: 'img/fox-sleep.png', awake: 'img/fox-awake.png' };
 const isParent = () => !document.body.classList.contains('child-mode');
 const log = [];               // スキャン履歴（おやモードの確認用・最新10件）
 let lastScan = { text: '', at: 0 };
 let current = null;           // いま開いているもの
 
-/* ================= こどもモードの画面（状態ごと） ================= */
-const SCANNER_SVG = `<svg class="scanner-pic" viewBox="0 0 200 120"><path d="M100 26 L40 -10 L160 -10Z" fill="#E07A4F" opacity=".18"/>
-  <rect x="62" y="26" width="76" height="92" rx="22" fill="#2B2A33"/><rect x="76" y="40" width="48" height="26" rx="6" fill="#4A4955"/>
-  <circle cx="100" cy="92" r="11" fill="#E07A4F"/></svg>`;
-
-const screens = {
-  idle: () => `
-    ${SCANNER_SVG}
-    <div class="big-msg">教材の QR を<br><em>ピッ</em> してね</div>
-    <div class="sub">スキャナーを QR に あてるだけ</div>`,
-
-  panel: r => `
-    <div class="pill ok">ピッ しました ✓</div>
-    <div class="sub">${r.kind === 'youtube' ? 'YouTube の どうが' : r.kind === 'audio' ? 'おんせい' : 'どうが'}</div>
-    <div class="title">${esc(r.host)}</div>
-    <div class="sub">本を 見ながら きいてね</div>
-    <div class="btn-row"><button class="btn ghost big" data-act="close">とじる</button></div>`,
-
-  tab: r => `
-    <div class="pill ok">ピッ しました ✓</div>
-    <div class="big-msg" style="font-size:40px">あたらしい タブで<br>ひらいたよ</div>
-    <div class="sub">おわったら その タブを とじてね。ここに もどるよ</div>
-    <div class="title" style="font-size:22px">${esc(r.host)}</div>
-    <div class="btn-row">
-      <button class="btn orange big" data-act="reopen">もういちど ひらく</button>
-      <button class="btn ghost big" data-act="close">とじる</button>
-    </div>`,
-
-  blockedPopup: r => `
-    <div class="pill wait">ひらけなかったよ</div>
-    <div class="big-msg" style="font-size:40px">ボタンを おして<br>ひらいてね</div>
-    <div class="title" style="font-size:22px">${esc(r.host)}</div>
-    <div class="btn-row"><button class="btn orange big" data-act="reopen">▶ ひらく</button></div>`,
-
-  notAllowed: r => `
-    <div class="pill wait">まだ ひらけない QR</div>
-    <div class="big-msg" style="font-size:44px">おうちの人に<br>きいてね</div>
-    <div class="sub">${esc(r.host)}</div>
-    <div class="btn-row"><button class="btn ghost big" data-act="close">もどる</button></div>`,
-
-  later: msg => `
-    <div class="pill wait">ピッ できたよ</div>
-    <div class="big-msg" style="font-size:40px">${msg}</div>
-    <div class="sub">これから つかえるように なるよ</div>
-    <div class="btn-row"><button class="btn ghost big" data-act="close">もどる</button></div>`,
-
-  unknown: () => `
-    <div class="pill wait">？</div>
-    <div class="big-msg" style="font-size:40px">これは 教材の<br>QR じゃないみたい</div>
-    <div class="btn-row"><button class="btn ghost big" data-act="close">もどる</button></div>`,
-};
-
-function render(name, arg) {
-  el.status.innerHTML = screens[name](arg);
+/* ================= こどもモード：バーの表示 ================= */
+// fox: 'sleep' | 'awake'、act: ボタン文字（ポップアップが止められた時だけ）
+function show({ fox = 'awake', title, sub = '', act = '' }) {
+  if (!el.fox.src.endsWith(FOX[fox])) el.fox.src = FOX[fox];
+  if (fox === 'awake') { el.fox.classList.remove('pop'); void el.fox.offsetWidth; el.fox.classList.add('pop'); }
+  el.title.textContent = title;
+  el.sub.textContent = sub;
+  el.act.hidden = !act;
+  el.act.textContent = act;
 }
 
-el.status.addEventListener('click', e => {
-  const act = e.target.closest('[data-act]')?.dataset.act;
-  if (act === 'close') goIdle();
-  if (act === 'reopen' && current) render(openTab(current.url) ? 'tab' : 'blockedPopup', current);
-});
+const itemLabel = r => [siteName(r.host), r.title || (r.kind === 'page' ? pageHint(r.url) : '')].filter(Boolean).join(' | ');
 
 function goIdle() {
   closeMedia(el.media);
   current = null;
-  el.media.innerHTML = `<div class="placeholder">ここに どうがや おんせいが でるよ</div>`;
-  render('idle');
+  el.mediaDrop.hidden = true;
+  show({ fox: 'sleep', title: 'ピッとすると、ひらくよ', sub: 'QRコードを読み取ってください' });
+}
+
+el.act.onclick = () => {
+  if (current && openTab(current.url)) show({ title: '教材をひらきました', sub: itemLabel(current) });
+};
+
+/* ================= 教材を開く（スキャンでも履歴からでも同じ） ================= */
+function openItem(r) {
+  closeMedia(el.media);
+  el.hist.hidden = true; el.histBtn.classList.remove('on');
+  current = r;
+
+  const { opened } = showMedia(el.media, r);
+  el.mediaDrop.hidden = opened !== 'panel';
+  if (opened === 'blocked') show({ title: 'ボタンで ひらいてね', sub: itemLabel(r), act: '▶ ひらく' });
+  else show({ title: '教材をひらきました', sub: itemLabel(r) });
+
+  history.add({ url: r.url, host: r.host, kind: r.kind, youtubeId: r.youtubeId, title: r.title });
+  if (r.kind === 'youtube' && !r.title) {
+    youtubeTitle(r.url).then(t => {
+      if (!t) return;
+      history.update(r.url, { title: t });
+      if (current?.url === r.url) { current.title = t; el.sub.textContent = itemLabel(current); }
+    });
+  }
 }
 
 /* ================= スキャンを受け取ったとき ================= */
@@ -99,57 +79,92 @@ function handleScan(scan) {
   lastScan = { text: r.text, at: now };
 
   addLog(scan, r);
-  el.dot.textContent = '● ' + new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) + ' に読んだ';
-  el.dot.classList.add('on');
-
   if (isParent()) return;      // おやモード中は「確認」だけ（開かない）
 
   if (r.type === 'url') {
     if (!allow.isAllowed(r.host)) {
       pending.push({ url: r.url, host: r.host });
       beep(false);
-      closeMedia(el.media);      // 前に開いていた動画などは止める
-      current = null;
-      el.media.innerHTML = `<div class="placeholder">ここに どうがや おんせいが でるよ</div>`;
-      return render('notAllowed', r);
+      closeMedia(el.media); el.mediaDrop.hidden = true; current = null;
+      return show({ title: 'おうちの人に きいてね', sub: `まだ ひらけない QR（${siteName(r.host)}）` });
     }
     beep(true); flash();
-    closeMedia(el.media);
-    current = r;
-    const { opened } = showMedia(el.media, r);
-    if (opened === 'panel') return render('panel', r);
-    el.media.innerHTML = `<div class="placeholder">あたらしい タブで ひょうじ中</div>`;
-    return render(opened === 'tab' ? 'tab' : 'blockedPopup', r);
+    const old = history.list().find(h => h.url === r.url);   // 前に開いた教材なら題名を引き継ぐ
+    return openItem({ ...r, title: old?.title });
   }
 
-  beep(true); flash();
-  if (r.type === 'card') return render('later', 'カードを<br>よみとったよ');
-  if (r.type === 'isbn') return render('later', '本の バーコードを<br>よみとったよ');
+  if (r.type === 'card') { beep(true); return show({ title: 'カードを よみとったよ', sub: 'これから つかえるように なるよ' }); }
+  if (r.type === 'isbn') { beep(true); return show({ title: '本の バーコードを よみとったよ', sub: 'これから つかえるように なるよ' }); }
   beep(false);
-  render('unknown');
+  show({ title: 'これは 教材の QR じゃないみたい', sub: 'ほかの QR を ピッ してね' });
 }
 
 startScanner(handleScan);
 
 // 教材タブを閉じたら、最初の画面に自動でもどる
 setInterval(() => {
-  if (current?.kind === 'page' && tabClosed() && !isParent()) goIdle();
+  if (current?.kind === 'page' && el.act.hidden && tabClosed() && !isParent()) goIdle();
 }, 1000);
 
-/* ================= おやモード ================= */
-let pressTimer = null;
-el.brand.addEventListener('pointerdown', () => {
-  el.brand.classList.add('pressing');
-  pressTimer = setTimeout(() => setParent(true), 1500);
+// スキャナーの文字は「いま前に出ている画面」に届く。この画面が裏にある時はそれを知らせる
+function updateReady() {
+  const on = document.hasFocus();
+  el.ready.classList.toggle('off', !on);
+  el.readyText.textContent = on ? '読み取り待ち' : 'この画面で 読めるよ';
+}
+window.addEventListener('focus', updateReady);
+window.addEventListener('blur', updateReady);
+setInterval(updateReady, 1500);
+
+/* ================= 履歴（時計ボタン） ================= */
+const ICON_OPEN = `<svg viewBox="0 0 24 24"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>`;
+const ICON_AUDIO = `<svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>`;
+const KIND = { youtube: 'どうが', video: 'どうが', audio: 'おんせい', page: 'ページ' };
+
+function thumb(h) {
+  if (h.kind === 'youtube' && h.youtubeId)
+    return `<img src="https://i.ytimg.com/vi/${encodeURIComponent(h.youtubeId)}/mqdefault.jpg" alt="">`;
+  if (h.kind === 'audio' || h.kind === 'video') return ICON_AUDIO;
+  return `<img class="fav" src="https://www.google.com/s2/favicons?sz=128&domain=${encodeURIComponent(h.host)}" alt="">`;
+}
+
+function renderHistory() {
+  const l = history.list().slice(0, 5);
+  el.histList.innerHTML = l.length ? l.map((h, i) => `
+    <li data-i="${i}">
+      <div class="thumb">${thumb(h)}</div>
+      <div class="h-text">
+        <div class="h-title">${esc(h.title || siteName(h.host))}</div>
+        <div class="h-sub">${esc(h.title ? siteName(h.host) : (pageHint(h.url) || KIND[h.kind] || 'ページ'))} ・ ${whenLabel(h.at)}</div>
+      </div>
+      <div class="h-open">${ICON_OPEN}</div>
+    </li>`).join('')
+    : `<li class="empty">まだ ひらいた教材は ないよ</li>`;
+}
+
+el.histBtn.onclick = () => {
+  const open = el.hist.hidden;
+  el.hist.hidden = !open;
+  el.histBtn.classList.toggle('on', open);
+  if (open) { el.mediaDrop.hidden = true; renderHistory(); }
+  else if (current && el.media.innerHTML) el.mediaDrop.hidden = false;
+};
+
+el.histList.addEventListener('click', e => {
+  const li = e.target.closest('li[data-i]');
+  if (!li) return;
+  const h = history.list()[Number(li.dataset.i)];
+  const r = classify(h.url);
+  if (r.type === 'url') { flash(); openItem({ ...r, title: h.title }); }
 });
-['pointerup', 'pointerleave', 'pointercancel'].forEach(t => el.brand.addEventListener(t, () => {
-  el.brand.classList.remove('pressing'); clearTimeout(pressTimer);
-}));
+
+/* ================= おやモード（歯車ボタン） ================= */
+el.gearBtn.onclick = () => setParent(true);
 el.back.onclick = () => setParent(false);
 
 function setParent(on) {
-  el.brand.classList.remove('pressing');
   document.body.classList.toggle('child-mode', !on);
+  el.hist.hidden = true; el.histBtn.classList.remove('on');
   if (on) { closeMedia(el.media); refreshParent(); }
   else goIdle();
 }
@@ -183,7 +198,6 @@ el.allowList.addEventListener('click', e => {
   if (d && confirm(`${d} を許可サイトから外しますか？`)) { allow.remove(d); refreshParent(); }
 });
 el.openAll.onchange = () => allow.setOpenAll(el.openAll.checked);
-
 el.allowForm.onsubmit = e => {
   e.preventDefault();
   if (!allow.add(el.allowInput.value)) return alert('サイトの形になっていません（例：example.com）');
@@ -237,10 +251,10 @@ function beep(good) {
 }
 
 function esc(s) {
-  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 // 開発中の確認用（コンソールから classify('https://...') を試せる）
-window.studyDesk = { classify, allow, pending };
+window.studyDesk = { classify, allow, pending, history };
 
 goIdle();

@@ -3,33 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI学習デスク</title>
+<title>ピッとマナビ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=BIZ+UDGothic:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=3.2">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=4.0">
 </head>
 <body class="child-mode">
 
-<header>
-  <!-- 長押し（1.5秒）でおやモードへ -->
-  <div class="brand" id="brand">✏️ AI学習デスク <small id="ver"></small></div>
-  <div class="scanner-dot" id="scannerDot" title="さいごに読んだ時刻">● スキャナー まち</div>
-</header>
+<!-- ===== こどもモード（ピッとマナビ） ===== -->
+<div class="child" id="child">
+  <div class="logo"><b>ピッとマナビ</b><span>QR LEARNING LAUNCHER</span><small id="ver"></small></div>
 
-<!-- ===== こどもモード ===== -->
-<main class="child" id="child">
-  <section class="status" id="status">
-    <!-- app.js が状態ごとに中身を入れかえる -->
-  </section>
-
-  <section class="media" id="mediaWrap">
-    <div class="media-label" id="mediaLabel">QR の おんせい・どうが</div>
-    <div class="media-panel" id="media">
-      <div class="placeholder">ここに どうがや おんせいが でるよ</div>
+  <div class="launcher">
+    <div class="bar">
+      <img class="fox" id="fox" src="img/fox-sleep.png" alt="">
+      <div class="msg">
+        <div class="title" id="title">ピッとすると、ひらくよ</div>
+        <div class="sub" id="sub">QRコードを読み取ってください</div>
+      </div>
+      <button class="act" id="act" hidden></button>
+      <div class="ready" id="ready"><i></i><span id="readyText">読み取り待ち</span></div>
+      <div class="icons">
+        <button class="icon" id="histBtn" aria-label="りれき">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        </button>
+        <button class="icon" id="gearBtn" aria-label="せってい">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+      </div>
     </div>
-  </section>
-</main>
+
+    <!-- 履歴（時計ボタンで開く） -->
+    <div class="drop" id="hist" style="--tip:75px" hidden>
+      <div class="drop-head">さいきんひらいた教材</div>
+      <ul class="hist-list" id="histList"></ul>
+      <div class="drop-foot">もう一度ひらくには、教材をクリック</div>
+    </div>
+
+    <!-- YouTube・音声はここで再生 -->
+    <div class="drop media" id="mediaDrop" hidden>
+      <div class="media-panel" id="media"></div>
+    </div>
+  </div>
+</div>
 
 <!-- ===== おやモード ===== -->
 <main class="parent parent-only" id="parent">
@@ -78,6 +95,6 @@
   </div>
 </main>
 
-<script type="module" src="js/app.js?v=3.2"></script>
+<script type="module" src="js/app.js?v=4.0"></script>
 </body>
 </html>
