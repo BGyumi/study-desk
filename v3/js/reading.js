@@ -1,5 +1,8 @@
 // ===== 読書通帳：本のバーコード（ISBN）→ 書名をしらべて記録 =====
-import { store } from './config.js?v=4.6';
+import { store } from './config.js?v=4.7';
+
+// Google Books の APIキー（おやモードで入れる。無くても動くが、混んでいると 429 で断られる）
+const gb = isbn => `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}` + (store.get('gbKey') ? `&key=${encodeURIComponent(store.get('gbKey'))}` : '');
 
 const KEY = 'reading';
 
@@ -38,7 +41,7 @@ export async function lookupIsbn(isbn) {
     if (s?.title) { info.title = s.title; info.author = s.author || ''; if (s.cover) info.covers.push(s.cover); }
   } catch { /* 次をためす */ }
   try {
-    const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+    const r = await fetch(gb(isbn));
     const v = (await r.json())?.items?.[0]?.volumeInfo;
     if (v?.title && !info.title) { info.title = v.title; info.author = (v.authors || []).join('、'); }
     const t = v?.imageLinks?.thumbnail;
@@ -74,7 +77,7 @@ export async function diagnoseCover(isbn) {
     } catch { out.push({ name, ok: false, note: 'つながらない（ブロック？）' }); return ''; }
   };
   const c1 = await tryJson('openBD', `https://api.openbd.jp/v1/get?isbn=${isbn}`, j => j?.[0]?.summary?.cover);
-  const c2 = await tryJson('Google Books', `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`,
+  const c2 = await tryJson('Google Books', gb(isbn),
     j => j?.items?.[0]?.volumeInfo?.imageLinks?.thumbnail?.replace(/^http:/, 'https:'));
   for (const [name, u] of [['openBDの画像', c1], ['Google Booksの画像', c2],
     ['国立国会図書館', `https://ndlsearch.ndl.go.jp/thumbnail/${isbn}.jpg`],

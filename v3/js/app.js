@@ -1,13 +1,13 @@
 // ===== アプリ本体：スキャナー → 振り分け → 表示 をつなぐ =====
-import { CONFIG, VERSION } from './config.js?v=4.6';
-import { startScanner } from './scanner.js?v=4.6';
-import { route, classify } from './router.js?v=4.6';
-import { allow, pending } from './allow.js?v=4.6';
-import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=4.6';
-import { history, siteName, whenLabel, youtubeTitle, pageHint } from './history.js?v=4.6';
-import { kids, session, kidFromCard } from './kids.js?v=4.6';
-import { reading, lookupIsbn, diagnoseCover, isPriceBarcode, exportBackup, importBackup } from './reading.js?v=4.6';
-import { captureCover } from './coverCam.js?v=4.6';
+import { CONFIG, VERSION, store } from './config.js?v=4.7';
+import { startScanner } from './scanner.js?v=4.7';
+import { route, classify } from './router.js?v=4.7';
+import { allow, pending } from './allow.js?v=4.7';
+import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=4.7';
+import { history, siteName, whenLabel, youtubeTitle, pageHint } from './history.js?v=4.7';
+import { kids, session, kidFromCard } from './kids.js?v=4.7';
+import { reading, lookupIsbn, diagnoseCover, isPriceBarcode, exportBackup, importBackup } from './reading.js?v=4.7';
+import { captureCover } from './coverCam.js?v=4.7';
 
 const $ = id => document.getElementById(id);
 const el = {
@@ -69,7 +69,7 @@ function openItem(r) {
   closeDrops();
   current = r;
 
-  const { opened } = showMedia(el.media, r);
+  const { opened, el: mediaEl } = showMedia(el.media, r, why => mediaProblem(r, why, mediaEl));
   el.mediaDrop.hidden = opened !== 'panel';
   if (opened === 'blocked') show({ title: 'ボタンで ひらいてね', sub: itemLabel(r), act: '▶ ひらく', onAct: openCurrentTab });
   else show({ title: '教材をひらきました', sub: itemLabel(r) });
@@ -82,6 +82,15 @@ function openItem(r) {
       if (current?.url === r.url) { current.title = t; el.sub.textContent = itemLabel(current); }
     });
   }
+}
+
+// 音声・動画が再生できなかった時：理由を出して、ボタンで聞けるようにする
+function mediaProblem(r, why, mediaEl) {
+  if (current !== r) return;
+  const msg = { autoplay: 'ボタンを おすと きけるよ', http: 'この音声は べつのタブで きいてね', load: 'この音声が ひらけなかったよ' }[why];
+  if (why === 'autoplay') return show({ title: msg, sub: itemLabel(r), act: '▶ きく', onAct: () => mediaEl?.play().catch(() => {}) });
+  log.unshift({ time: new Date().toLocaleTimeString('ja-JP'), raw: r.url, us: '', diff: false, label: why === 'http' ? '再生NG（http）' : '再生NG' });
+  show({ title: msg, sub: itemLabel(r), act: '▶ べつのタブで きく', onAct: openCurrentTab });
 }
 
 /* ================= スキャンを受け取ったとき ================= */
@@ -396,6 +405,9 @@ el.allowForm.onsubmit = e => {
   el.allowInput.value = '';
   refreshParent();
 };
+
+$('gbKeyInput').value = store.get('gbKey') || '';
+$('gbKeyForm').onsubmit = e => { e.preventDefault(); store.set('gbKey', $('gbKeyInput').value.trim()); alert('保存しました'); };
 
 // 表紙テスト：どの探し先がこのPCから届いているかを見る
 $('coverTestForm').onsubmit = async e => {

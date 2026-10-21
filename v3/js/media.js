@@ -2,7 +2,7 @@
 let tab = null;   // 教材ページ用のタブは1つだけを使い回す（タブが増えないように）
 
 // panel に表示する。ふつうのページ（HTML）は新しいタブ。戻り値：{ opened: 'panel' | 'tab' | 'blocked' }
-export function showMedia(panel, r) {
+export function showMedia(panel, r, onProblem) {
   panel.innerHTML = '';
 
   if (r.kind === 'youtube') {
@@ -18,10 +18,12 @@ export function showMedia(panel, r) {
 
   if (r.kind === 'audio' || r.kind === 'video') {
     const m = document.createElement(r.kind);
-    m.src = r.url; m.controls = true; m.autoplay = true;
+    m.src = r.url; m.controls = true; m.autoplay = true; m.preload = 'auto';
+    // 再生できなかった時は理由を知らせる（http のファイル・サイトのブロック・自動再生の禁止など）
+    m.onerror = () => onProblem?.(r.url.startsWith('http:') ? 'http' : 'load');
     panel.appendChild(m);
-    m.play().catch(() => {});
-    return { opened: 'panel' };
+    m.play().catch(e => { if (e?.name === 'NotAllowedError') onProblem?.('autoplay'); });
+    return { opened: 'panel', el: m };
   }
 
   // 教材のHTMLページは埋め込みを禁止していることが多いので、新しいタブで開く

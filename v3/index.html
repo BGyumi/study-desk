@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=4.6">
+<link rel="stylesheet" href="css/style.css?v=4.7">
 </head>
 <body class="child-mode">
 
@@ -124,11 +124,15 @@
         <button class="btn" type="submit">表紙をさがしてみる</button>
       </form>
       <ul class="list" id="coverTestOut"></ul>
+      <form class="row" id="gbKeyForm" style="margin-top:10px">
+        <input id="gbKeyInput" placeholder="Google Books の APIキー（429が出る時に入れる）" autocomplete="off">
+        <button class="btn" type="submit">保存</button>
+      </form>
       <p class="note">本文の読み上げ（カメラ＋OCR）は今まで通り <a href="../v2/">v2</a> で使えます。</p>
     </section>
   </div>
 </main>
 
-<script type="module" src="js/app.js?v=4.6"></script>
+<script type="module" src="js/app.js?v=4.7"></script>
 </body>
 </html>

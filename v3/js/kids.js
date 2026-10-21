@@ -1,6 +1,6 @@
 // ===== 子ども3人：名前・色・「いま使っているのは誰か」 =====
 // 名前はこの端末のブラウザ内だけに保存（GitHubには載らない）
-import { CONFIG, store } from './config.js?v=4.6';
+import { CONFIG, store } from './config.js?v=4.7';
 
 export const KID_COLORS = ['#E07A4F', '#368C85', '#4F6FB0'];
 const DEFAULT = [1, 2, 3].map(n => ({ id: n, name: `${n}ばんめ` }));
