@@ -1,13 +1,13 @@
 // ===== アプリ本体：スキャナー → 振り分け → 表示 をつなぐ =====
-import { CONFIG, VERSION } from './config.js?v=4.5';
-import { startScanner } from './scanner.js?v=4.5';
-import { route, classify } from './router.js?v=4.5';
-import { allow, pending } from './allow.js?v=4.5';
-import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=4.5';
-import { history, siteName, whenLabel, youtubeTitle, pageHint } from './history.js?v=4.5';
-import { kids, session, kidFromCard } from './kids.js?v=4.5';
-import { reading, lookupIsbn, isPriceBarcode, exportBackup, importBackup } from './reading.js?v=4.5';
-import { captureCover } from './coverCam.js?v=4.5';
+import { CONFIG, VERSION } from './config.js?v=4.6';
+import { startScanner } from './scanner.js?v=4.6';
+import { route, classify } from './router.js?v=4.6';
+import { allow, pending } from './allow.js?v=4.6';
+import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=4.6';
+import { history, siteName, whenLabel, youtubeTitle, pageHint } from './history.js?v=4.6';
+import { kids, session, kidFromCard } from './kids.js?v=4.6';
+import { reading, lookupIsbn, diagnoseCover, isPriceBarcode, exportBackup, importBackup } from './reading.js?v=4.6';
+import { captureCover } from './coverCam.js?v=4.6';
 
 const $ = id => document.getElementById(id);
 const el = {
@@ -395,6 +395,18 @@ el.allowForm.onsubmit = e => {
   if (!allow.add(el.allowInput.value)) return alert('サイトの形になっていません（例：example.com）');
   el.allowInput.value = '';
   refreshParent();
+};
+
+// 表紙テスト：どの探し先がこのPCから届いているかを見る
+$('coverTestForm').onsubmit = async e => {
+  e.preventDefault();
+  const isbn = $('coverTestInput').value.replace(/\D/g, '');
+  const out = $('coverTestOut');
+  if (!/^97[89]\d{10}$/.test(isbn)) { out.innerHTML = '<li class="empty">978か979で始まる13桁を入れてください</li>'; return; }
+  out.innerHTML = '<li class="empty">しらべています…</li>';
+  const res = await diagnoseCover(isbn);
+  out.innerHTML = res.map(r => `<li><div>${r.ok ? '✅' : '❌'} <b>${esc(r.name)}</b><div class="meta">${esc(r.note)}</div></div>
+    ${r.url ? `<div class="rl-cv"><img src="${esc(r.url)}" alt=""></div>` : ''}</li>`).join('');
 };
 
 // スキャナーが無くても、URLを貼りつけて「読んだこと」にできる（こどもモードに戻って実行）

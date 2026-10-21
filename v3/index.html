@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=4.5">
+<link rel="stylesheet" href="css/style.css?v=4.6">
 </head>
 <body class="child-mode">
 
@@ -119,11 +119,16 @@
         <input id="testInput" placeholder="URLを貼りつけ（例：https://www.youtube.com/watch?v=...）" autocomplete="off">
         <button class="btn" type="submit">読んだことにする</button>
       </form>
+      <form class="row" id="coverTestForm" style="margin-top:10px">
+        <input id="coverTestInput" placeholder="表紙テスト：ISBN（978〜の13桁）" autocomplete="off" inputmode="numeric">
+        <button class="btn" type="submit">表紙をさがしてみる</button>
+      </form>
+      <ul class="list" id="coverTestOut"></ul>
       <p class="note">本文の読み上げ（カメラ＋OCR）は今まで通り <a href="../v2/">v2</a> で使えます。</p>
     </section>
   </div>
 </main>
 
-<script type="module" src="js/app.js?v=4.5"></script>
+<script type="module" src="js/app.js?v=4.6"></script>
 </body>
 </html>

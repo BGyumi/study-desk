@@ -1,5 +1,5 @@
 // ===== 読書通帳：本のバーコード（ISBN）→ 書名をしらべて記録 =====
-import { store } from './config.js?v=4.5';
+import { store } from './config.js?v=4.6';
 
 const KEY = 'reading';
 
@@ -59,6 +59,31 @@ export async function lookupIsbn(isbn) {
   const cover = await firstImage(info.covers);
   if (!info.title && !cover) return null;
   return (cache[isbn] = { title: info.title, author: info.author, cover });
+}
+
+// おやモードの「表紙テスト」：探し先ごとに、つながったか・表紙があったかを調べる
+export async function diagnoseCover(isbn) {
+  const out = [];
+  const tryJson = async (name, url, pick) => {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) return out.push({ name, ok: false, note: `つながったが エラー（${r.status}）` }), '';
+      const cover = pick(await r.json());
+      out.push({ name, ok: !!cover, note: cover ? '表紙あり' : 'つながった・表紙なし' });
+      return cover || '';
+    } catch { out.push({ name, ok: false, note: 'つながらない（ブロック？）' }); return ''; }
+  };
+  const c1 = await tryJson('openBD', `https://api.openbd.jp/v1/get?isbn=${isbn}`, j => j?.[0]?.summary?.cover);
+  const c2 = await tryJson('Google Books', `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`,
+    j => j?.items?.[0]?.volumeInfo?.imageLinks?.thumbnail?.replace(/^http:/, 'https:'));
+  for (const [name, u] of [['openBDの画像', c1], ['Google Booksの画像', c2],
+    ['国立国会図書館', `https://ndlsearch.ndl.go.jp/thumbnail/${isbn}.jpg`],
+    ['Open Library', `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg?default=false`]]) {
+    if (!u) continue;
+    const ok = !!(await firstImage([u]));
+    out.push({ name, ok, note: ok ? '画像が出た' : '画像なし／ブロック', url: ok ? u : '' });
+  }
+  return out;
 }
 
 // 画像URLを順にためして、ちゃんと表示できた最初の1つを返す（小さすぎる「画像なし」画像ははじく）
