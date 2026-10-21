@@ -10,7 +10,7 @@
 //     usText  … 押された物理キー（e.code）を US配列として読み直したもの
 //   どちらが正しいかは router.js が判断する。
 
-import { CONFIG } from './config.js?v=4.4';
+import { CONFIG } from './config.js?v=4.5';
 
 // 物理キー → US配列の [通常, Shift] 文字
 const US = {

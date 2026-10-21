@@ -1,13 +1,13 @@
 // ===== アプリ本体：スキャナー → 振り分け → 表示 をつなぐ =====
-import { CONFIG, VERSION } from './config.js?v=4.4';
-import { startScanner } from './scanner.js?v=4.4';
-import { route, classify } from './router.js?v=4.4';
-import { allow, pending } from './allow.js?v=4.4';
-import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=4.4';
-import { history, siteName, whenLabel, youtubeTitle, pageHint } from './history.js?v=4.4';
-import { kids, session, kidFromCard } from './kids.js?v=4.4';
-import { reading, lookupIsbn, isPriceBarcode, exportBackup, importBackup } from './reading.js?v=4.4';
-import { captureCover } from './coverCam.js?v=4.4';
+import { CONFIG, VERSION } from './config.js?v=4.5';
+import { startScanner } from './scanner.js?v=4.5';
+import { route, classify } from './router.js?v=4.5';
+import { allow, pending } from './allow.js?v=4.5';
+import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=4.5';
+import { history, siteName, whenLabel, youtubeTitle, pageHint } from './history.js?v=4.5';
+import { kids, session, kidFromCard } from './kids.js?v=4.5';
+import { reading, lookupIsbn, isPriceBarcode, exportBackup, importBackup } from './reading.js?v=4.5';
+import { captureCover } from './coverCam.js?v=4.5';
 
 const $ = id => document.getElementById(id);
 const el = {

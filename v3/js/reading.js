@@ -1,5 +1,5 @@
 // ===== 読書通帳：本のバーコード（ISBN）→ 書名をしらべて記録 =====
-import { store } from './config.js?v=4.4';
+import { store } from './config.js?v=4.5';
 
 const KEY = 'reading';
 

@@ -1,5 +1,5 @@
 // ===== 設定値はここに集約（数字を変えたいときはこのファイルだけ触ればOK） =====
-export const VERSION = '4.4';
+export const VERSION = '4.5';
 
 export const CONFIG = {
   // スキャナー判定：1文字ごとの間隔がこれ以下なら「スキャナーの入力」とみなす（ミリ秒）
