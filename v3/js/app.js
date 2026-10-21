@@ -162,7 +162,15 @@ async function recordBook(k, isbn) {
   });
   if (!info?.title && added) reading.update(rec.id, { unknown: true });
   if (!added) {
-    show({ title: 'この本は きょう もう きろく したよ', sub: rec.title });
+    // 前に記録した本：表紙や書名が見つかったら書き足す
+    const patch = {};
+    if (!rec.cover && info?.cover) patch.cover = rec.cover = info.cover;
+    if (rec.unknown && info?.title) { patch.title = rec.title = info.title; patch.unknown = false; }
+    if (Object.keys(patch).length) reading.update(rec.id, patch);
+    show({
+      title: 'この本は きょう もう きろく したよ', sub: rec.title,
+      ...(rec.cover ? {} : { act: '📷 ひょうしを とる', onAct: () => takeCover(rec.id) }),
+    });
   } else {
     flash();
     show({
@@ -441,4 +449,18 @@ function esc(s) {
 // 開発中の確認用（コンソールから classify('https://...') を試せる）
 window.studyDesk = { classify, allow, pending, history, reading, kids };
 
+// 表紙の無い記録は、起動のたびにもう一度だけ探してみる（前のバージョンで記録した本など）
+async function retryCovers() {
+  const todo = reading.list().filter(r => r.isbn && !r.cover).slice(0, 30);
+  for (const r of todo) {
+    const info = await lookupIsbn(r.isbn);
+    const patch = {};
+    if (info?.cover) patch.cover = info.cover;
+    if (r.unknown && info?.title) { patch.title = info.title; patch.unknown = false; }
+    if (Object.keys(patch).length) reading.update(r.id, patch);
+  }
+  if (todo.length && !el.shelf.hidden) openShelf();
+}
+
 goIdle();
+retryCovers();
