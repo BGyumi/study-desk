@@ -28,12 +28,17 @@ export function classify(text) {
 }
 
 // URLの中身が「YouTube／音声ファイル／動画ファイル／ふつうのページ」のどれか
+//   YouTubeは「動画1本」と「再生リスト」だけアプリ内で再生する。
+//   チャンネルや検索ページなどはブラウザで開かない（家ではブラウザのYouTubeを止めているため）→ kind: 'ytother'
 function mediaKind(url, host) {
-  if (/(^|\.)youtube\.com$|^youtu\.be$/.test(host)) {
+  if (/(^|\.)youtube(-nocookie)?\.com$|^youtu\.be$/.test(host)) {
     let id = url.searchParams.get('v');
-    if (!id && host === 'youtu.be') id = url.pathname.slice(1);
-    if (!id) { const m = url.pathname.match(/\/(shorts|embed|live)\/([\w-]+)/); if (m) id = m[2]; }
-    if (id) return { kind: 'youtube', youtubeId: id };
+    if (!id && host === 'youtu.be') id = url.pathname.slice(1).split('/')[0];
+    if (!id) { const m = url.pathname.match(/\/(shorts|embed|live|v)\/([\w-]+)/); if (m && m[2] !== 'videoseries') id = m[2]; }
+    const list = url.searchParams.get('list');
+    const ok = x => x && /^[\w-]+$/.test(x);
+    if (ok(id) || ok(list)) return { kind: 'youtube', youtubeId: ok(id) ? id : '', listId: ok(list) ? list : '' };
+    return { kind: 'ytother' };
   }
   if (/\.(mp3|m4a|wav|aac|oga|ogg)$/i.test(url.pathname)) return { kind: 'audio' };
   if (/\.(mp4|webm|mov)$/i.test(url.pathname)) return { kind: 'video' };

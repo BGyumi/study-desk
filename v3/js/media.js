@@ -6,8 +6,12 @@ export function showMedia(panel, r) {
   panel.innerHTML = '';
 
   if (r.kind === 'youtube') {
-    // rel=0：関連動画を出さない（脱線防止）
-    panel.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(r.youtubeId)}?autoplay=1&rel=0&modestbranding=1"
+    // 動画1本：embed/動画ID（再生リスト付きならそのまま続きも流れる）／再生リストだけ：embed/videoseries
+    // rel=0：関連動画を出さない（脱線防止）、playsinline：その場で再生
+    const q = new URLSearchParams({ autoplay: '1', playsinline: '1', rel: '0', modestbranding: '1' });
+    if (r.listId) q.set('list', r.listId);
+    const path = r.youtubeId ? encodeURIComponent(r.youtubeId) : 'videoseries';
+    panel.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${path}?${q}"
       allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
     return { opened: 'panel' };
   }

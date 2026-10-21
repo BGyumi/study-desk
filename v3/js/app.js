@@ -1,12 +1,13 @@
 // ===== アプリ本体：スキャナー → 振り分け → 表示 をつなぐ =====
-import { CONFIG, VERSION } from './config.js?v=4.3';
-import { startScanner } from './scanner.js?v=4.3';
-import { route, classify } from './router.js?v=4.3';
-import { allow, pending } from './allow.js?v=4.3';
-import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=4.3';
-import { history, siteName, whenLabel, youtubeTitle, pageHint } from './history.js?v=4.3';
-import { kids, session, kidFromCard } from './kids.js?v=4.3';
-import { reading, lookupIsbn, isPriceBarcode, exportBackup, importBackup } from './reading.js?v=4.3';
+import { CONFIG, VERSION } from './config.js?v=4.4';
+import { startScanner } from './scanner.js?v=4.4';
+import { route, classify } from './router.js?v=4.4';
+import { allow, pending } from './allow.js?v=4.4';
+import { showMedia, openTab, closeMedia, tabClosed } from './media.js?v=4.4';
+import { history, siteName, whenLabel, youtubeTitle, pageHint } from './history.js?v=4.4';
+import { kids, session, kidFromCard } from './kids.js?v=4.4';
+import { reading, lookupIsbn, isPriceBarcode, exportBackup, importBackup } from './reading.js?v=4.4';
+import { captureCover } from './coverCam.js?v=4.4';
 
 const $ = id => document.getElementById(id);
 const el = {
@@ -30,8 +31,10 @@ let lastScan = { text: '', at: 0 };
 let current = null;           // いま開いているもの
 
 /* ================= こどもモード：バーの表示 ================= */
-// fox: 'sleep' | 'awake'、act: ボタン文字（ポップアップが止められた時だけ）
-function show({ fox = 'awake', title, sub = '', act = '' }) {
+// fox: 'sleep' | 'awake'、act: ボタン文字、onAct: ボタンを押した時の動き
+let actFn = null;
+function show({ fox = 'awake', title, sub = '', act = '', onAct = null }) {
+  actFn = act ? onAct : null;
   if (!el.fox.src.endsWith(FOX[fox])) el.fox.src = FOX[fox];
   if (fox === 'awake') { el.fox.classList.remove('pop'); void el.fox.offsetWidth; el.fox.classList.add('pop'); }
   el.title.textContent = title;
@@ -49,7 +52,8 @@ function goIdle() {
   show({ fox: 'sleep', title: 'ピッとすると、ひらくよ', sub: 'QRコードを読み取ってください' });
 }
 
-el.act.onclick = () => {
+el.act.onclick = () => actFn?.();
+const openCurrentTab = () => {
   if (current && openTab(current.url)) show({ title: '教材をひらきました', sub: itemLabel(current) });
 };
 
@@ -67,10 +71,10 @@ function openItem(r) {
 
   const { opened } = showMedia(el.media, r);
   el.mediaDrop.hidden = opened !== 'panel';
-  if (opened === 'blocked') show({ title: 'ボタンで ひらいてね', sub: itemLabel(r), act: '▶ ひらく' });
+  if (opened === 'blocked') show({ title: 'ボタンで ひらいてね', sub: itemLabel(r), act: '▶ ひらく', onAct: openCurrentTab });
   else show({ title: '教材をひらきました', sub: itemLabel(r) });
 
-  history.add({ url: r.url, host: r.host, kind: r.kind, youtubeId: r.youtubeId, title: r.title });
+  history.add({ url: r.url, host: r.host, kind: r.kind, youtubeId: r.youtubeId, listId: r.listId, title: r.title });
   if (r.kind === 'youtube' && !r.title) {
     youtubeTitle(r.url).then(t => {
       if (!t) return;
@@ -94,6 +98,11 @@ function handleScan(scan) {
   session.touch();
 
   if (r.type === 'url') {
+    if (r.kind === 'ytother') {   // YouTubeのチャンネル・検索ページなど：ブラウザでは開かない
+      beep(false);
+      closeMedia(el.media); el.mediaDrop.hidden = true; current = null;
+      return show({ title: 'この どうがは ここでは みられないよ', sub: 'おうちの人に きいてね' });
+    }
     if (!allow.isAllowed(r.host)) {
       pending.push({ url: r.url, host: r.host });
       beep(false);
@@ -151,17 +160,30 @@ async function recordBook(k, isbn) {
     title: info?.title || `なまえの わからない本（${isbn}）`,
     author: info?.author, cover: info?.cover,
   });
-  if (!info && added) reading.update(rec.id, { unknown: true });
+  if (!info?.title && added) reading.update(rec.id, { unknown: true });
   if (!added) {
     show({ title: 'この本は きょう もう きろく したよ', sub: rec.title });
   } else {
     flash();
     show({
       title: `${k.name}さん ${reading.count(k.id)}冊目！ やったね`,
-      sub: info ? rec.title : '本の なまえは おうちの人が いれてくれるよ',
+      sub: rec.cover ? (info?.title ? rec.title : '本の なまえは おうちの人が いれてくれるよ')
+                     : 'ひょうしが みつからなかったよ。カメラで とってみよう',
+      ...(rec.cover ? {} : { act: '📷 ひょうしを とる', onAct: () => takeCover(rec.id) }),
     });
   }
   openShelf(rec.id);
+}
+
+// 表紙が無い本：USBカメラで撮って、その本の表紙にする
+async function takeCover(id) {
+  const img = await captureCover();
+  if (!img) return;
+  reading.update(id, { cover: img });
+  if (isParent()) return refreshReading();
+  flash();
+  show({ title: 'ひょうしが はいったよ！', sub: reading.list().find(r => r.id === id)?.title || '' });
+  openShelf(id);
 }
 
 function renderKidChip() {
@@ -186,12 +208,18 @@ function openShelf(highlightId) {
   const books = reading.byKid(k.id);
   el.shelfHead.innerHTML = `${esc(k.name)}さんの どくしょ通帳<span class="shelf-count"><b>${books.length}</b>冊</span>`;
   el.shelfBody.innerHTML = books.length ? `<div class="books">${books.slice(0, 18).map(b => `
-    <div class="book ${b.id === highlightId ? 'new' : ''}">
+    <div class="book ${b.id === highlightId ? 'new' : ''} ${b.cover ? '' : 'nocover'}" data-id="${b.id}">
       <div class="cv ${b.cover ? 'img' : ''}">${b.cover ? `<img src="${esc(b.cover)}" alt="" onerror="this.parentNode.classList.remove('img'); this.replaceWith(this.dataset.t)" data-t="${esc(b.title)}">` : esc(b.title)}</div>
       <div class="t">${esc(b.title)}</div><div class="d">${whenLabel(b.at)}</div>
     </div>`).join('')}</div>`
     : `<div class="shelf-hint" style="padding:24px">よんだ 本の バーコードを ピッ してみよう</div>`;
 }
+
+// 表紙の無い本をタッチ → カメラで撮る
+el.shelfBody.addEventListener('click', e => {
+  const b = e.target.closest('.book.nocover');
+  if (b) takeCover(b.dataset.id);
+});
 
 el.shelfBtn.onclick = () => {
   if (!el.shelf.hidden) { closeDrops(); if (current && el.media.innerHTML) el.mediaDrop.hidden = false; return; }
@@ -285,9 +313,9 @@ function refreshReading() {
   const l = reading.list().slice(0, 20);
   el.readList.innerHTML = l.length ? l.map(r => {
     const k = kids.get(r.kid);
-    return `<li><div><b>${esc(r.title)}</b>
+    return `<li><div class="rl-cv">${r.cover ? `<img src="${esc(r.cover)}" alt="">` : ''}</div><div style="flex:1"><b>${esc(r.title)}</b>
       <div class="meta">${esc(k?.name || '')} ・ ${new Date(r.at).toLocaleDateString('ja-JP')}${r.isbn ? ' ・ ISBN ' + r.isbn : ''}${r.unknown ? ' ・ <b style="color:var(--warn)">名前を入れてください</b>' : ''}</div></div>
-      <div class="btns"><button class="btn ghost" data-edit="${r.id}">名前をなおす</button><button class="btn ghost" data-delread="${r.id}">削除</button></div></li>`;
+      <div class="btns"><button class="btn ghost" data-cover="${r.id}">${r.cover ? '表紙をとりなおす' : '表紙をとる'}</button><button class="btn ghost" data-edit="${r.id}">名前をなおす</button><button class="btn ghost" data-delread="${r.id}">削除</button></div></li>`;
   }).join('') : `<li class="empty">まだ記録はありません</li>`;
 }
 
@@ -296,6 +324,7 @@ el.kidNames.addEventListener('change', e => {
   if (id) { kids.rename(id, e.target.value); refreshReading(); renderKidChip(); }
 });
 el.readList.addEventListener('click', e => {
+  if (e.target.dataset.cover) return takeCover(e.target.dataset.cover);
   const ed = e.target.dataset.edit, del = e.target.dataset.delread;
   const rec = reading.list().find(r => r.id === (ed || del));
   if (ed && rec) {

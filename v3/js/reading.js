@@ -1,5 +1,5 @@
 // ===== 読書通帳：本のバーコード（ISBN）→ 書名をしらべて記録 =====
-import { store } from './config.js?v=4.3';
+import { store } from './config.js?v=4.4';
 
 const KEY = 'reading';
 
@@ -22,30 +22,58 @@ export const reading = {
   remove(id) { store.set(KEY, this.list().filter(r => r.id !== id)); },
 };
 
-// 書名しらべ：openBD（日本の本に強い・無料）→ だめなら Google Books
+// 書名しらべ：openBD（日本の本に強い）→ Google Books → 国立国会図書館
+// 表紙は「書名が見つかった所の表紙」→ 国立国会図書館の表紙 → Open Library の順に、実際に画像が出るものを使う
 const cache = {};
 export async function lookupIsbn(isbn) {
   if (cache[isbn]) return cache[isbn];
   // 前にだれかが読んだ本なら、その時の情報を使う（ネットがなくてもOK）
-  const known = reading.list().find(r => r.isbn === isbn && r.title && !r.unknown);
+  const known = reading.list().find(r => r.isbn === isbn && r.title && !r.unknown && r.cover);
   if (known) return (cache[isbn] = { title: known.title, author: known.author, cover: known.cover });
 
+  const info = { title: '', author: '', covers: [] };
   try {
     const r = await fetch(`https://api.openbd.jp/v1/get?isbn=${isbn}`);
     const s = (await r.json())?.[0]?.summary;
-    if (s?.title) return (cache[isbn] = { title: s.title, author: s.author || '', cover: s.cover || '' });
+    if (s?.title) { info.title = s.title; info.author = s.author || ''; if (s.cover) info.covers.push(s.cover); }
   } catch { /* 次をためす */ }
   try {
     const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
     const v = (await r.json())?.items?.[0]?.volumeInfo;
-    if (v?.title) {
-      return (cache[isbn] = {
-        title: v.title, author: (v.authors || []).join('、'),
-        cover: (v.imageLinks?.thumbnail || '').replace(/^http:/, 'https:'),
-      });
-    }
-  } catch { /* 見つからなかった */ }
-  return null;
+    if (v?.title && !info.title) { info.title = v.title; info.author = (v.authors || []).join('、'); }
+    const t = v?.imageLinks?.thumbnail;
+    if (t) info.covers.push(t.replace(/^http:/, 'https:').replace('&edge=curl', ''));
+  } catch { /* 次をためす */ }
+  if (!info.title) {
+    try {
+      const r = await fetch(`https://ndlsearch.ndl.go.jp/api/opensearch?isbn=${isbn}&cnt=1`);
+      const x = new DOMParser().parseFromString(await r.text(), 'text/xml');
+      const item = x.querySelector('item');
+      const title = item?.getElementsByTagName('dc:title')[0]?.textContent || item?.querySelector('title')?.textContent;
+      if (title) { info.title = title.trim(); info.author = item.getElementsByTagName('dc:creator')[0]?.textContent?.trim() || ''; }
+    } catch { /* 見つからなかった */ }
+  }
+  info.covers.push(`https://ndlsearch.ndl.go.jp/thumbnail/${isbn}.jpg`,
+                   `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg?default=false`);
+
+  const cover = await firstImage(info.covers);
+  if (!info.title && !cover) return null;
+  return (cache[isbn] = { title: info.title, author: info.author, cover });
+}
+
+// 画像URLを順にためして、ちゃんと表示できた最初の1つを返す（小さすぎる「画像なし」画像ははじく）
+async function firstImage(urls) {
+  for (const u of urls) {
+    const ok = await new Promise(res => {
+      const img = new Image();
+      const t = setTimeout(() => res(false), 5000);
+      img.onload = () => { clearTimeout(t); res(img.naturalWidth > 20 && img.naturalHeight > 20); };
+      img.onerror = () => { clearTimeout(t); res(false); };
+      img.src = u;
+    });
+    if (ok) return u;
+  }
+  return '';
 }
 
 // 本の裏の「下のバーコード」（値段などの番号：191/192で始まる）
